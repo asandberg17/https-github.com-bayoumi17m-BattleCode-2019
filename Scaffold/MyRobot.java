@@ -127,7 +127,9 @@ public class MyRobot extends BCAbstractRobot {
                         }
                     }
                 }
-                signal(Integer.parseInt("" + x + "0" + y),2);
+                String sig = "" + x;
+                sig = "" + sig.length() + sig;
+                signal(Integer.parseInt(sig + y),2);
                 return;
             }
 
@@ -140,9 +142,26 @@ public class MyRobot extends BCAbstractRobot {
                  
                 //log(Integer.toString([0][getVisibleRobots()[0].castle_talk]));
             }
-            if (turn == 2){
-                
-                astar(x,y,1);
+            if (turn == 3){
+                Robot[] visibleBots = getVisibleRobots();
+                for (Robot bot: visibleBots){
+                    if (isRadioing(bot)){
+                        String signal = "" + r.signal;
+                        int parsePoint = 1 + Integer.parseInt(signal.subString(0,1));
+                        int y = Integer.parseInt(signal.substring(parsePoint));
+                        int x = Integer.parseInt(signal.substring(1,parsePoint));
+
+
+                        me.curPath = astar(x,y,1);
+                        break;
+                    }
+                }
+                if me.curPath.size() > 0{
+                    Node new_Node = me.curPath.removeFirst();
+                    return move(new_Node.x - me.x,new_Node.y - me.y);
+                } else {
+                    return;
+                }
             }
         }
 
