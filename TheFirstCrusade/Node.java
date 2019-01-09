@@ -1,3 +1,4 @@
+package bc19;
 
 public class Node {
         Node parent;
