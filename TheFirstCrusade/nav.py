@@ -221,7 +221,7 @@ def astar_crusader(vis,loc,pass_map,goal,cost):
 
     j = -1
 
-    while q.isEmpty() == False || j > 50:
+    while q.isEmpty() == False and j <= 50:
         j += 1
         (cx,cy,cs) = q.pop()
 
