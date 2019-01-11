@@ -3,7 +3,7 @@ import battlecode as bc
 import random
 import nav
 import util
-import time
+# import time
 # import copy
 
 __pragma__('iconv')
@@ -14,6 +14,11 @@ __pragma__('opov')
 
 # don't try to use global variables!!
 class MyRobot(BCAbstractRobot):
+
+    wave = []
+    homePath = []
+    visited = []
+    mapSize = 0
 
     already_been = {}
     base = None
@@ -55,31 +60,62 @@ class MyRobot(BCAbstractRobot):
             
                
         elif self.me['unit'] == SPECS['CASTLE']:
-            self.log("the map is "+ nav.symmetric(self.map))
-            if self.me['turn'] < 10:
+            # self.log("the map is "+ nav.symmetric(self.map))
+
+            if self.me['turn'] < 3:
+                if random.random() >= 0.5:
+                    mapEnergy = self.get_fuel_map()
+                else:
+                    mapEnergy = self.get_karbonite_map()
+
+                size = len(mapEnergy) -1
+                dist = 121
+                targetX = "0"
+                targetY = "0"
+                for i in range(-10,11):
+                    for k in range(-10,11):
+                        if self.me['y'] + i < 0 or self.me['x'] + k < 0 or self.me['y'] + i > size or self.me['x'] + k > size:
+                            continue
+                        if mapEnergy[self.me['y'] + i][self.me['x'] + k] and i**2 + k**2 < dist:
+                            targetX = str(self.me['x'] + k)
+                            targetY = str(self.me['y'] + i)
+                            dist = i**2 + k**2
+
+                self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
+
+                self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                my_coord = (self.me['x'], self.me['y'])
+                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+            elif self.me['turn'] < 10:
                 my_coord = (self.me['x'], self.me['y'])
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 self.log("Building a crusader at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
                 return self.build_unit(SPECS['CRUSADER'], goal_dir[0],goal_dir[1])
             else:
-                self.log("Castle health: " + self.me['health'])
+                pass
+                # self.log("Castle health: " + self.me['health'])
         
         elif self.me['unit'] == SPECS['PILGRIM']:
             if self.me['turn'] == 1:
                 # Map Building
-                fuelMap = self.fuel_map
+                # fuelMap = self.fuel_map
                 passMap = self.map
-                karbMap = self.karbonite_map
-                size = len(fuelMap)
-                for y in range(size):
+                # karbMap = self.karbonite_map
+                self.mapSize = len(passMap)
+                for y in range(self.mapSize):
                     row = []
-                    for x in range(size):
+                    vrow = []
+                    for x in range(self.mapSize):
+                        vrow.append(0)
                         if passMap[y][x] == False:
-                            row.append(1)
+                            row.append(0)
                         else:
                             row.append(0)
                     self.wave.append(row)
-                # self.wave = copy.deepcopy(passMap)
+                    self.visited.append(vrow)
+
+                # self.log("IMPORTANT0: " + str(self.visited[12][38]))
 
                 # Read Signal!
                 signal = ""
@@ -88,6 +124,7 @@ class MyRobot(BCAbstractRobot):
                         signal = str(botv['signal'])
                         break
 
+                # self.log("Signal: " + signal)
                 parsePoint = int(signal[0])
                 y = int(signal[parsePoint+1:])
                 x = int(signal[1:parsePoint+1])
@@ -95,39 +132,49 @@ class MyRobot(BCAbstractRobot):
                 self.wave[y][x] = 2
                 self.targetX = x
                 self.targetY = y
+                # self.log("IMPORTANT1: " + str(self.visited[12][38]))
 
-                
             if self.me['turn'] == 2:
-
-                start = time.time()
-                goal = (util.Node(self.targetX,self.targetY),2)
+                # start = time.time()
+                goal = (self.targetX,self.targetY,2)
                 q = util.Queue()
                 q.push(goal)
-                visited = set()
-                #j= 0
+                # j= 0
+
+                # self.log("IMPORTANT2: " + str(self.visited[12][38]))
+
 
                 while q.isEmpty() == False:
                     # self.log(str(self.wave))
-                    #j += 1
-                    # self.log(str(len(visited)) + ", " + str((time.time() - start)*1000))
+                    # j += 1
+                    # self.log(str(j) + ", " + str((time.time() - start)*1000))
                     
-                    (n,cs) = q.pop()
-                    cy = n.y
-                    cx = n.x
+                    (cx,cy,cs) = q.pop()
+                    # self.log(str(self.wave))
+                    # self.log("Position: " + str((cx,cy)) + ", Value: " +  str(self.visited[cy][cx]))
 
-                    if n not in visited:
-                        visited.add(n)
+                    if not self.visited[cy][cx]:
+                        self.visited[cy][cx] = 1
                         self.wave[cy][cx] =  1 + cs
                         for new_pos in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]: # Adjacent squares
                             newx = new_pos[0] + cx
                             newy = new_pos[1] + cy
                             
-                            if (newx > size-1 or newy > size-1 or 0 > newy or 0 > newx):
+                            if (newx > self.mapSize-1 or newy > self.mapSize-1 or 0 > newy or 0 > newx):
                                 continue;
                             if self.wave[newy][newx] == 1:
                                 continue;
 
-                            q.push((util.Node(newx, newy), self.wave[cy][cx]))
+                            new_node = (newx,newy,self.wave[cy][cx])
+
+                #             # self.log(str(newx > size-1))
+                #             # self.log("visited: " + str((newx,newy)) + "~" + str(self.visited[newy][newx]))
+                #             # self.log(str(self.me['id']) + ": " + str(self.visited))
+                            
+                            if self.visited[newy][newx]:
+                                pass
+                            else:
+                                q.push(new_node)
 
                 curScore = self.wave[self.me['y']][self.me['x']]
                 newScore = curScore
@@ -136,7 +183,9 @@ class MyRobot(BCAbstractRobot):
                 for moves in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
                     newx = moves[0] + self.me['x']
                     newy = moves[1] + self.me['y']
-                    self.log("Action: " + str(moves) + ", Cur: " + str(curScore) + ", New: " + str(self.wave[newy][newx]))
+                    if (newx > self.mapSize-1 or newy > self.mapSize-1 or 0 > newy or 0 > newx):
+                                continue;
+                    # self.log("Action: " + str(moves) + ", Cur: " + str(curScore) + ", New: " + str(self.wave[newy][newx]))
 
                     if self.wave[newy][newx] < newScore and self.wave[newy][newx] != 1:
                         newScore = self.wave[newy][newx]
@@ -147,32 +196,52 @@ class MyRobot(BCAbstractRobot):
                 self.homePath.append(action)
                 return self.move(action[0],action[1])
 
-            if self.me['turn'] > 2:
-                if self.wave[self.me['y']][self.me['x']] == 2 and self.me['fuel'] < 100:
+            if self.me['turn'] > 1:
+                karbMiner = self.get_karbonite_map()[self.targetY][self.targetX]
+                self.log("karbMiner: " + str(karbMiner))
+
+                if karbMiner:
+                    energy = 'karbonite'
+                    capacity = SPECS['UNITS'][SPECS['PILGRIM']]['KARBONITE_CAPACITY']
+                else:
+                    energy = 'fuel'
+                    capacity = SPECS['UNITS'][SPECS['PILGRIM']]['FUEL_CAPACITY']
+
+                botv_pos = []
+                for botv in self.get_visible_robots():
+                    botv_pos.append(util.nodeHash(botv.x,botv.y))
+                if self.wave[self.me['y']][self.me['x']] == 3 and self.me[energy] < capacity:
                     # self.log("MINING")
+                    self.log(energy + " " + str(self.me[energy]) + "/" + str(capacity))
                     return self.mine()
 
-                elif self.me['fuel'] < 100 and self.wave[self.me['y']][self.me['x']] != 2:
+                elif self.me[energy] < capacity and self.wave[self.me['y']][self.me['x']] != 3:
                     curScore = self.wave[self.me['y']][self.me['x']]
                     newScore = curScore
-                    action = (-100,-100)
+                    action = (0,0)
                     size = len(self.wave) - 1
                     for moves in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
                         newx = moves[0] + self.me['x']
                         newy = moves[1] + self.me['y']
-                        self.log("Action: " + str(moves) + ", Cur: " + str(curScore) + ", New: " + str(self.wave[newy][newx]))
+
+                        if util.nodeHash(newx,newy) in botv_pos:
+                            continue;
+
+                        if (newx > self.mapSize-1 or newy > self.mapSize-1 or 0 > newy or 0 > newx):
+                                continue;
+                        # self.log("Action: " + str(moves) + ", Cur: " + str(curScore) + ", New: " + str(self.wave[newy][newx]))
 
                         if newy > size or newx > size or newy < 0 or newx < 0:
                             continue
 
-                        if self.wave[newy][newx] < newScore and self.wave[newy][newx] < 10000:
+                        if self.wave[newy][newx] < newScore and self.wave[newy][newx] != 1:
                             newScore = self.wave[newy][newx]
                             action = moves
 
                     self.homePath.append(action)
                     return self.move(action[0],action[1])
 
-                elif self.me['fuel'] == 100 and self.homePath != []:
+                elif self.me[energy] == capacity and self.homePath != []:
                     
                     action = self.homePath.pop()
                     action[0] = -action[0]

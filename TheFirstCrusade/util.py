@@ -99,12 +99,18 @@ def raiseNotDefined():
     print("*** Method not implemented: %s at line %s of %s" % (method, line, fileName))
     sys.exit(1)
 
-class Node():
-    y = -1
-    x = -1
+def countVisited(visited):
+    size = len(visited)
+    count = 0
+    for y in range(size):
+        for x in range(size):
+            if visited[y][x]:
+                count += 1
 
-    def __init__(self,x,y):
-        self.x = x
-        self.y = y
+    return count
+
+def nodeHash(k1,k2):
+    return ((k1+k2)*(k1+k2+1))/2 + k2
+
     
     
