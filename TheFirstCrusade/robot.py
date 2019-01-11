@@ -55,7 +55,7 @@ class MyRobot(BCAbstractRobot):
             # # The directions: North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest
             my_coord = (self.me['x'], self.me['y'])
             self.already_been[my_coord] = True
-            self.log(nav.symmetric(self.map))
+            # self.log(nav.symmetric(self.map)) for some reason this would sometimes throw an error
             # self.log("My destination is "+self.destination)
             if not self.destination:
                 self.log("trying to move")
