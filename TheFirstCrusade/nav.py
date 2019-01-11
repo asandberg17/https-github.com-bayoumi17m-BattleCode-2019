@@ -166,6 +166,15 @@ def symmetric(full_map,loc):
     coord5_h=coord5[0],l-coord5[1]
     coord6=randint(0,l),randint(0,l)
     coord6_h=coord6[0],l-coord6[1]
+    coord7=randint(0,l),randint(0,l)
+    coord7_h=coord7[0],l-coord7[1]
+    coord8=randint(0,l),randint(0,l)
+    coord8_h=coord8[0],l-coord8[1]
+    coord9=randint(0,l),randint(0,l)
+    coord9_h=coord9[0],l-coord9[1]
+    coord10=randint(0,l),randint(0,l)
+    coord10_h=coord10[0],l-coord10[1]
+
 
     if full_map[coord1_h[1]][coord1_h[0]]==full_map[coord1[1]][coord1[0]]:
         if full_map[coord2_h[1]][coord2_h[0]]==full_map[coord2[1]][coord2[0]]:
@@ -173,7 +182,11 @@ def symmetric(full_map,loc):
                 if full_map[coord4_h[1]][coord4_h[0]]==full_map[coord4[1]][coord4[0]]:
                     if full_map[coord5_h[1]][coord5_h[0]]==full_map[coord5[1]][coord5[0]]:
                         if full_map[coord6_h[1]][coord6_h[0]]==full_map[coord6[1]][coord6[0]]:
-                            return True
+                            if full_map[coord7_h[1]][coord7_h[0]]==full_map[coord7[1]][coord7[0]]:
+                                if full_map[coord8_h[1]][coord8_h[0]]==full_map[coord8[1]][coord8[0]]:
+                                    if full_map[coord9_h[1]][coord9_h[0]]==full_map[coord9[1]][coord9[0]]:
+                                        if full_map[coord10_h[1]][coord10_h[0]]==full_map[coord10[1]][coord10[0]]:
+                                            return True
     return False
 
 
