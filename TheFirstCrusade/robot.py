@@ -15,6 +15,8 @@ __pragma__('opov')
 # don't try to use global variables!!
 class MyRobot(BCAbstractRobot):
 
+    karboniteMining = True
+
     wave = []
     homePath = []
     visited = []
@@ -63,17 +65,19 @@ class MyRobot(BCAbstractRobot):
             # self.log("the map is "+ nav.symmetric(self.map))
 
             if self.me['turn'] < 3:
-                if random.random() >= 0.5:
+                if not self.karboniteMining:
                     mapEnergy = self.get_fuel_map()
+                    self.karboniteMining  = True
                 else:
                     mapEnergy = self.get_karbonite_map()
+                    self.karboniteMining = False
 
                 size = len(mapEnergy) -1
                 dist = 121
                 targetX = "0"
                 targetY = "0"
-                for i in range(-10,11):
-                    for k in range(-10,11):
+                for i in range(-20,21):
+                    for k in range(-20,21):
                         if self.me['y'] + i < 0 or self.me['x'] + k < 0 or self.me['y'] + i > size or self.me['x'] + k > size:
                             continue
                         if mapEnergy[self.me['y'] + i][self.me['x'] + k] and i**2 + k**2 < dist:
@@ -253,6 +257,6 @@ class MyRobot(BCAbstractRobot):
                     for botv in self.get_visible_robots():
                         if botv['unit'] == SPECS['CASTLE']:
                             break;
-                    return self.give(botv['x'] - self.me['x'],botv['y'] - self.me['y'], 0, self.me['fuel'])
+                    return self.give(botv['x'] - self.me['x'],botv['y'] - self.me['y'], self.me['karbonite'], self.me['fuel'])
 
 robot = MyRobot()
