@@ -78,25 +78,38 @@ def reflect(full_map, loc, horizontal=True):
         return v_reflec if full_map[v_reflec[1]][v_reflec[0]] else h_reflec
 
 def is_passable(full_map, loc, coord_dir, robot_map=None):
-    new_point = (loc[0] + coord_dir[0], loc[1] + coord_dir[1])
-    if new_point[0] < 0 or new_point[0] > len(full_map):
-        return False
-    if new_point[1] < 0 or new_point[0] > len(full_map):
-        return False
-    if not full_map[new_point[1]][new_point[0]]:
-        return False
-    if robot_map is not None and robot_map[new_point[1]][new_point[0]] > 0:
-        return False
-    return True
+    # new_point = (loc[0] + coord_dir[0], loc[1] + coord_dir[1])
+    # if new_point[0] < 0 or new_point[0] > len(full_map):
+    #     return False
+    # if new_point[1] < 0 or new_point[0] > len(full_map):
+    #     return False
+    # if not full_map[new_point[1]][new_point[0]]:
+    #     return False
+    # if robot_map is not None and robot_map[new_point[1]][new_point[0]] > 0:
+    #     return False
+    # return True
+    return False
 
 def apply_dir(loc, dir):
     return (loc[0] + dir[0], loc[1] + dir[1])
 
 def goto(loc, target, full_map, robot_map, already_been):
-    goal_dir = calculate_dir(loc, target)
+    goal_dir1 = calculate_dir(loc, target) 
+    loc1=apply_dir(loc,goal_dir1)
+    goal_dir2 = calculate_dir(loc1, target)
+    goal_dir2=goal_dir2[0]+goal_dir1[0],goal_dir2[1]+goal_dir1[1]
+    loc2=apply_dir(loc1,goal_dir2)
+    goal_dir3 = calculate_dir(loc2, target)
+    goal_dir3=goal_dir3[0]+goal_dir2[0],goal_dir3[1]+goal_dir2[1]
+    # calculate three goal directions, run at three, if it doesnt work run at two...
+    goal_dir=goal_dir3
+    loc=loc2
     if goal_dir is (0,0):
         return (0,0)
     # self.log("MOVING FROM " + str(my_coord) + " TO " + str(nav.dir_to_coord[goal_dir]))
+    if goal_dir3[0]**2 +goal_dir3[1]**2>9:
+        goal_dir=goal_dir2
+        loc=loc1
     i = 0
     while not is_passable(full_map, loc, goal_dir, robot_map) and i < 4:# or apply_dir(loc, goal_dir) in already_been: # doesn't work because `in` doesn't work :(
         # alternate checking either side of the goal dir, by increasing amounts (but not past directly backwards)
@@ -106,6 +119,10 @@ def goto(loc, target, full_map, robot_map, already_been):
             i = -i + 1
         goal_dir = rotate(goal_dir, i)
     return goal_dir
+
+    
+    
+    
 
 
 
@@ -154,7 +171,8 @@ def spawn(loc,full_map,robot_map):
     return goal_dir
 
 def symmetric(full_map):
-    l=len(full_map)
+    #l=len(full_map)
+    l=57
 
     coord1=randint(0,l),randint(0,l)
     coord1_h=coord1[0],l-1-coord1[1]
@@ -178,33 +196,33 @@ def symmetric(full_map):
     coord10_h=coord10[0],l-1-coord10[1]
 
 
-    while full_map[coord1[1]][coord1[0]]:
-        coord1=randint(0,l),randint(0,l)
-    coord1_h=coord1[0],l-1-coord1[1]
-    while full_map[coord2[1]][coord2[0]]:
-        coord2=randint(0,l),randint(0,l)
-    coord2_h=coord2[0],l-1-coord2[1]
-    while full_map[coord3[1]][coord3[0]]:
-        coord3=randint(0,l),randint(0,l)
-    coord3_h=coord3[0],l-1-coord3[1]
-    while full_map[coord4[1]][coord4[0]]:
-        coord4=randint(0,l),randint(0,l)
-    coord4_h=coord4[0],l-1-coord4[1]
+    # while full_map[coord1[1]][coord1[0]]:
+    #     coord1=randint(0,l),randint(0,l)
+    # coord1_h=coord1[0],l-1-coord1[1]
+    # while full_map[coord2[1]][coord2[0]]:
+    #     coord2=randint(0,l),randint(0,l)
+    # coord2_h=coord2[0],l-1-coord2[1]
+    # while full_map[coord3[1]][coord3[0]]:
+    #     coord3=randint(0,l),randint(0,l)
+    # coord3_h=coord3[0],l-1-coord3[1]
+    # while full_map[coord4[1]][coord4[0]]:
+    #     coord4=randint(0,l),randint(0,l)
+    # coord4_h=coord4[0],l-1-coord4[1]
 
 
 
 
-    if full_map[coord1_h[1]][coord1_h[0]]==full_map[coord1[1]][coord1[0]]:
-        if full_map[coord2_h[1]][coord2_h[0]]==full_map[coord2[1]][coord2[0]]:
-            if full_map[coord3_h[1]][coord3_h[0]]==full_map[coord3[1]][coord3[0]]:
-                if full_map[coord4_h[1]][coord4_h[0]]==full_map[coord4[1]][coord4[0]]:
-                    if full_map[coord5_h[1]][coord5_h[0]]==full_map[coord5[1]][coord5[0]]:
-                        if full_map[coord6_h[1]][coord6_h[0]]==full_map[coord6[1]][coord6[0]]:
-                            if full_map[coord7_h[1]][coord7_h[0]]==full_map[coord7[1]][coord7[0]]:
-                                if full_map[coord8_h[1]][coord8_h[0]]==full_map[coord8[1]][coord8[0]]:
-                                    if full_map[coord9_h[1]][coord9_h[0]]==full_map[coord9[1]][coord9[0]]:
-                                        if full_map[coord10_h[1]][coord10_h[0]]==full_map[coord10[1]][coord10[0]]:
-                                            return True
+    # if full_map[coord1_h[1]][coord1_h[0]]==full_map[coord1[1]][coord1[0]]:
+    #     if full_map[coord2_h[1]][coord2_h[0]]==full_map[coord2[1]][coord2[0]]:
+    #         if full_map[coord3_h[1]][coord3_h[0]]==full_map[coord3[1]][coord3[0]]:
+    #             if full_map[coord4_h[1]][coord4_h[0]]==full_map[coord4[1]][coord4[0]]:
+    #                 if full_map[coord5_h[1]][coord5_h[0]]==full_map[coord5[1]][coord5[0]]:
+    #                     if full_map[coord6_h[1]][coord6_h[0]]==full_map[coord6[1]][coord6[0]]:
+    #                         if full_map[coord7_h[1]][coord7_h[0]]==full_map[coord7[1]][coord7[0]]:
+    #                             if full_map[coord8_h[1]][coord8_h[0]]==full_map[coord8[1]][coord8[0]]:
+    #                                 if full_map[coord9_h[1]][coord9_h[0]]==full_map[coord9[1]][coord9[0]]:
+    #                                     if full_map[coord10_h[1]][coord10_h[0]]==full_map[coord10[1]][coord10[0]]:
+    #                                         return True
     return False
 
 def chebychev_distance(x1,x2,y1,y2):
