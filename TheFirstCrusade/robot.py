@@ -94,7 +94,7 @@ class MyRobot(BCAbstractRobot):
                 my_coord = (self.me['x'], self.me['y'])
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
-            if self.me['turn'] < 10:
+            elif self.me['turn'] < 10:
                 my_coord = (self.me['x'], self.me['y'])
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 self.log("Building a crusader at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
@@ -204,8 +204,9 @@ class MyRobot(BCAbstractRobot):
                 return self.move(action[0],action[1])
 
             if self.me['turn'] > 1:
+
                 karbMiner = self.get_karbonite_map()[self.targetY][self.targetX]
-                self.log("karbMiner: " + str(karbMiner))
+                # self.log("karbMiner: " + str(karbMiner))
 
                 if karbMiner:
                     energy = 'karbonite'
@@ -217,6 +218,7 @@ class MyRobot(BCAbstractRobot):
                 botv_pos = []
                 for botv in self.get_visible_robots():
                     botv_pos.append(util.nodeHash(botv.x,botv.y))
+                    
                 if self.wave[self.me['y']][self.me['x']] == 3 and self.me[energy] < capacity:
                     # self.log("MINING")
                     self.log(energy + " " + str(self.me[energy]) + "/" + str(capacity))
@@ -255,10 +257,11 @@ class MyRobot(BCAbstractRobot):
                     action[1] = -action[1]
                     return self.move(action[0],action[1])
 
+
                 else:
                     
                     for botv in self.get_visible_robots():
-                        if botv['unit'] == SPECS['CASTLE']:
+                        if botv['unit'] == SPECS['CASTLE'] or botv['unit'] == SPECS['CHURCH']:
                             break;
                     return self.give(botv['x'] - self.me['x'],botv['y'] - self.me['y'], self.me['karbonite'], self.me['fuel'])
 
