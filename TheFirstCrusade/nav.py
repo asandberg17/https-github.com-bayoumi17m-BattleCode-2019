@@ -1,4 +1,5 @@
 from random import *
+import util
 
 
 coord_to_dir = {
@@ -188,6 +189,84 @@ def symmetric(full_map,loc):
                                         if full_map[coord10_h[1]][coord10_h[0]]==full_map[coord10[1]][coord10[0]]:
                                             return True
     return False
+
+def chebychev_distance(x1,x2,y1,y2):
+    y_dist = abs(y1 - y2)
+    x_dist = abs(x1- x2)
+    return max(x_dist,y_dist)
+
+def astar_crusader(vis,loc,pass_map,goal,cost):
+    vbot = []
+    for bot in vis:
+        vbot.append(bot['x'],bot['y'])
+
+    q = util.PriorityQueue()
+    q.push((loc[0],loc[1],0),0)
+
+    size = len(pass_map)
+
+    # False means visited or impassable here
+    visited = []
+    wave = []
+    for i in range(len(pass_map)):
+        row = []
+        wrow = []
+        for k in range(len(pass_map)):
+            wrow.append(1000)
+            if pass_map[i][k] == False:
+                row.append(1)
+            else:
+                row.append(0)
+        visited.append(row)
+
+    j = -1
+
+    while q.isEmpty() == False || j > 50:
+        j += 1
+        (cx,cy,cs) = q.pop()
+
+        if not visited[cy][cx]:
+            visited[cy][cx] = 2
+
+            wave[cy][cx] = cs
+
+            for xi in range(-3,4):
+                for yi in range(-3,4):
+                    if xi**2 + yi**2 < 9:
+                        newx = cx + xi
+                        newy = cy + yi
+
+                        if (newx > size-1 or newy > size-1 or 0 > newy or 0 > newx):
+                            continue
+                            
+                        if visited[newy][newx] == 1:
+                            continue
+
+                        if int(util.nodeHash(newx,newy)) in vbot:
+                            continue 
+
+                        f = 1 + chebychev_distance(newx,goal[0],newy,goal[1]) + cs #+ (xi**2 + yi**2)*cost
+                        q.push((newx,newy,f),f)
+
+    score = 1e32
+    action = (0,0)
+    for xi in range(-3,4):
+        for yi in range(-3,4):
+            if xi**2 + yi**2 < 9:
+                newx = loc[0] + xi
+                newy = loc[1] + yi
+
+                if visited[newy][newx] == 1 or newx > size-1 or newy > size-1 or 0 > newy or 0 > newx:
+                    continue;
+
+                if x[newx][newy] < score:
+                    score = x[newx][newy]
+                    action = (xi,yi)
+
+    return action
+
+
+
 
 
 
