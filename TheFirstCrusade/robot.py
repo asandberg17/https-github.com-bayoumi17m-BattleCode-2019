@@ -67,34 +67,34 @@ class MyRobot(BCAbstractRobot):
         elif self.me['unit'] == SPECS['CASTLE']:
             # self.log("the map is "+ nav.symmetric(self.map))
 
-            # if self.me['turn'] < 3:
-            #     if not self.karboniteMining:
-            #         mapEnergy = self.get_fuel_map()
-            #         self.karboniteMining  = True
-            #     else:
-            #         mapEnergy = self.get_karbonite_map()
-            #         self.karboniteMining = False
+            if self.me['turn'] < 3:
+                if not self.karboniteMining:
+                    mapEnergy = self.get_fuel_map()
+                    self.karboniteMining  = True
+                else:
+                    mapEnergy = self.get_karbonite_map()
+                    self.karboniteMining = False
 
-            #     size = len(mapEnergy) -1
-            #     dist = 121
-            #     targetX = "0"
-            #     targetY = "0"
-            #     for i in range(-20,21):
-            #         for k in range(-20,21):
-            #             if self.me['y'] + i < 0 or self.me['x'] + k < 0 or self.me['y'] + i > size or self.me['x'] + k > size:
-            #                 continue
-            #             if mapEnergy[self.me['y'] + i][self.me['x'] + k] and i**2 + k**2 < dist:
-            #                 targetX = str(self.me['x'] + k)
-            #                 targetY = str(self.me['y'] + i)
-            #                 dist = i**2 + k**2
+                size = len(mapEnergy) -1
+                dist = 121
+                targetX = "0"
+                targetY = "0"
+                for i in range(-20,21):
+                    for k in range(-20,21):
+                        if self.me['y'] + i < 0 or self.me['x'] + k < 0 or self.me['y'] + i > size or self.me['x'] + k > size:
+                            continue
+                        if mapEnergy[self.me['y'] + i][self.me['x'] + k] and i**2 + k**2 < dist:
+                            targetX = str(self.me['x'] + k)
+                            targetY = str(self.me['y'] + i)
+                            dist = i**2 + k**2
 
-            #     self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
+                self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
 
-            #     self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-            #     my_coord = (self.me['x'], self.me['y'])
-            #     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-            #     return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
-            if self.me['turn'] < 10:
+                self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                my_coord = (self.me['x'], self.me['y'])
+                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+            elif self.me['turn'] < 10:
                 my_coord = (self.me['x'], self.me['y'])
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 self.log("Building a crusader at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
