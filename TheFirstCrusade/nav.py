@@ -1,3 +1,5 @@
+from random import *
+
 
 coord_to_dir = {
     (0,0): "C",
@@ -69,6 +71,7 @@ def reflect(full_map, loc, horizontal=True):
         return v_reflec if full_map[v_reflec[1]][v_reflec[0]] else h_reflec
 
 def is_passable(full_map, loc, coord_dir, robot_map):
+    
     new_point = (loc[0] + coord_dir[0], loc[1] + coord_dir[1])
     if new_point[0] < 0 or new_point[0] > len(full_map):
         return False
@@ -87,10 +90,15 @@ def goto(loc, target, full_map, robot_map, already_been):
     goal_dir = calculate_dir(loc, target)
     if goal_dir is (0,0):
         return (0,0)
-    # self.log("MOVING FROM " + str(my_coord) + " TO " + str(nav.dir_to_coord[goal_dir]))
-    while not is_passable(full_map, loc, goal_dir, robot_map) or apply_dir(loc, goal_dir) in already_been:
-        goal_dir = rotate(goal_dir, 1)
-    return dir_to_coord[goal_dir]
+    #self.log("MOVING FROM " + str(my_coord) + " TO " + str(nav.dir_to_coord[goal_dir]))
+    #while (not is_passable(full_map, loc, goal_dir, robot_map)) or (apply_dir(loc, goal_dir) in already_been):
+    target=apply_dir(loc, goal_dir)
+    # while (not is_passable(full_map, loc, goal_dir, robot_map)) or (apply_dir(loc, goal_dir) in already_been):
+    #     goal_dir = rotate(goal_dir, 1)
+    #     target=apply_dir(loc, goal_dir)
+    return goal_dir
+    
+   
 
 
 
@@ -110,3 +118,41 @@ def get_closest_karbonite(loc, karb_map):
 
 def sq_dist(p1, p2):
     return (p1[0] - p2[0])**2 + (p1[1] - p2[1])**2
+
+def spawn(loc,full_map,robot_map):
+    goal_dir=(-1,0)
+    while not is_passable(full_map, loc, goal_dir, robot_map):
+        goal_dir = rotate(goal_dir, 1)
+    
+    return goal_dir
+
+def symmetric(full_map):
+    l=len(full_map)
+
+    coord1=randint(0,l),randint(0,l)
+    coord1_h=coord1[0],l-coord1[1]
+    coord2=randint(0,l),randint(0,l)
+    coord2_h=coord2[0],l-coord2[1]
+    coord3=randint(0,l),randint(0,l)
+    coord3_h=coord3[0],l-coord3[1]
+    coord4=randint(0,l),randint(0,l)
+    coord4_h=coord4[0],l-coord4[1]
+    coord5=randint(0,l),randint(0,l)
+    coord5_h=coord5[0],l-coord5[1]
+    coord6=randint(0,l),randint(0,l)
+    coord6_h=coord6[0],l-coord6[1]
+
+    if full_map[coord1_h[1]][coord1_h[0]]==full_map[coord1[1]][coord1[0]]:
+        if full_map[coord2_h[1]][coord2_h[0]]==full_map[coord2[1]][coord2[0]]:
+            if full_map[coord3_h[1]][coord3_h[0]]==full_map[coord3[1]][coord3[0]]:
+                if full_map[coord4_h[1]][coord4_h[0]]==full_map[coord4[1]][coord4[0]]:
+                    if full_map[coord5_h[1]][coord5_h[0]]==full_map[coord5[1]][coord5[0]]:
+                        if full_map[coord6_h[1]][coord6_h[0]]==full_map[coord6[1]][coord6[0]]:
+                            return True
+    return False
+
+
+
+
+
+
