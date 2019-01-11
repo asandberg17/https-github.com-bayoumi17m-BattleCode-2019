@@ -69,8 +69,9 @@ def rotate(orig_dir, amount):
     return direction
 
 def reflect(full_map, loc, horizontal=True):
-    v_reflec = (len(full_map[0]) - loc[0], loc[1])
-    h_reflec = (loc[0], len(full_map) - loc[1])
+    #need to use len-1 not len as a 57x57 board will only go up to a tile 56, start on that the h mirror should be zero
+    v_reflec = (len(full_map[0])-1 - loc[0], loc[1])
+    h_reflec = (loc[0], len(full_map)-1 - loc[1])
     if horizontal:
         return h_reflec if full_map[h_reflec[1]][h_reflec[0]] else v_reflec
     else:
@@ -175,6 +176,22 @@ def symmetric(full_map):
     coord9_h=coord9[0],l-coord9[1]
     coord10=randint(0,l),randint(0,l)
     coord10_h=coord10[0],l-coord10[1]
+
+
+    while full_map[coord1[1]][coord1[0]]:
+        coord1=randint(0,l),randint(0,l)
+    coord1_h=coord1[0],l-coord1[1]
+    while full_map[coord2[1]][coord2[0]]:
+        coord2=randint(0,l),randint(0,l)
+    coord2_h=coord2[0],l-coord2[1]
+    while full_map[coord3[1]][coord3[0]]:
+        coord3=randint(0,l),randint(0,l)
+    coord3_h=coord3[0],l-coord3[1]
+    while full_map[coord4[1]][coord4[0]]:
+        coord4=randint(0,l),randint(0,l)
+    coord4_h=coord4[0],l-coord4[1]
+
+
 
 
     if full_map[coord1_h[1]][coord1_h[0]]==full_map[coord1[1]][coord1[0]]:
