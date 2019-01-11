@@ -47,7 +47,6 @@ def calculate_dir(start, target):
     return (dx, dy)
 
 rotate_arr = [    
-    (0,0),
     (0,1),
     (1,1),
     (1,0),
@@ -58,8 +57,14 @@ rotate_arr = [
     (-1, 1)
 ]
 
+def get_list_index(lst, tup):
+    # only works for 2-tuples
+    for i in range(len(lst)):
+        if lst[i][0] == tup[0] and lst[i][1] == tup[1]:
+            return i
+
 def rotate(orig_dir, amount):
-    direction = rotate_arr[(rotate_arr.index(orig_dir) + amount) % 8]
+    direction = rotate_arr[(get_list_index(rotate_arr, orig_dir) + amount) % 8]
     return direction
 
 def reflect(full_map, loc, horizontal=True):
@@ -70,8 +75,7 @@ def reflect(full_map, loc, horizontal=True):
     else:
         return v_reflec if full_map[v_reflec[1]][v_reflec[0]] else h_reflec
 
-def is_passable(full_map, loc, coord_dir, robot_map):
-    
+def is_passable(full_map, loc, coord_dir, robot_map=None):
     new_point = (loc[0] + coord_dir[0], loc[1] + coord_dir[1])
     if new_point[0] < 0 or new_point[0] > len(full_map):
         return False
@@ -79,7 +83,7 @@ def is_passable(full_map, loc, coord_dir, robot_map):
         return False
     if not full_map[new_point[1]][new_point[0]]:
         return False
-    if robot_map[new_point[1]][new_point[0]] > 0:
+    if robot_map is not None and robot_map[new_point[1]][new_point[0]] > 0:
         return False
     return True
 
@@ -90,13 +94,34 @@ def goto(loc, target, full_map, robot_map, already_been):
     goal_dir = calculate_dir(loc, target)
     if goal_dir is (0,0):
         return (0,0)
-    #self.log("MOVING FROM " + str(my_coord) + " TO " + str(nav.dir_to_coord[goal_dir]))
-    #while (not is_passable(full_map, loc, goal_dir, robot_map)) or (apply_dir(loc, goal_dir) in already_been):
-    target=apply_dir(loc, goal_dir)
-    # while (not is_passable(full_map, loc, goal_dir, robot_map)) or (apply_dir(loc, goal_dir) in already_been):
-    #     goal_dir = rotate(goal_dir, 1)
-    #     target=apply_dir(loc, goal_dir)
+    # self.log("MOVING FROM " + str(my_coord) + " TO " + str(nav.dir_to_coord[goal_dir]))
+    i = 0
+    while not is_passable(full_map, loc, goal_dir, robot_map) and i < 4:# or apply_dir(loc, goal_dir) in already_been: # doesn't work because `in` doesn't work :(
+        # alternate checking either side of the goal dir, by increasing amounts (but not past directly backwards)
+        if i > 0:
+            i = -i
+        else:
+            i = -i + 1
+        goal_dir = rotate(goal_dir, i)
     return goal_dir
+
+
+
+
+        
+
+
+# def goto(loc, target, full_map, robot_map, already_been):
+#     goal_dir = calculate_dir(loc, target)
+#     if goal_dir is (0,0):
+#         return (0,0)
+#     #self.log("MOVING FROM " + str(my_coord) + " TO " + str(nav.dir_to_coord[goal_dir]))
+#     #while (not is_passable(full_map, loc, goal_dir, robot_map)) or (apply_dir(loc, goal_dir) in already_been):
+#     target=apply_dir(loc, goal_dir)
+#     # while (not is_passable(full_map, loc, goal_dir, robot_map)) or (apply_dir(loc, goal_dir) in already_been):
+#     #     goal_dir = rotate(goal_dir, 1)
+#     #     target=apply_dir(loc, goal_dir)
+#     return goal_dir
     
    
 
@@ -126,7 +151,7 @@ def spawn(loc,full_map,robot_map):
     
     return goal_dir
 
-def symmetric(full_map):
+def symmetric(full_map,loc):
     l=len(full_map)
 
     coord1=randint(0,l),randint(0,l)
