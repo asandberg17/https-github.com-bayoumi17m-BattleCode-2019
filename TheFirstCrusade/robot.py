@@ -96,7 +96,6 @@ class MyRobot(BCAbstractRobot):
             # loc=nav.apply_dir(my_coord,jump_dir)
             # self.log("this should not even be returning "+loc)
             # return self.move(*jump_dir)
-
             goal_dir=nav.goto(my_coord, self.destination, self.map, self.get_visible_robot_map(), self.already_been)
             #return self.move(*nav.goto(my_coord, self.destination, self.map, self.get_visible_robot_map(), self.already_been))
             self.log(goal_dir)
@@ -105,6 +104,12 @@ class MyRobot(BCAbstractRobot):
                
         elif self.me['unit'] == SPECS['CASTLE']:
             # self.log("the map is "+ nav.symmetric(self.map))
+            my_coord = (self.me['x'], self.me['y'])
+            if self.me['turn']<2:
+                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                self.log(self.me['turn'])
+                self.log("Building a Prophet at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
+                return self.build_unit(SPECS['PROPHET'], goal_dir[0],goal_dir[1])
 
             if self.me['turn'] < 3:
                 if not self.karboniteMining:
@@ -130,11 +135,9 @@ class MyRobot(BCAbstractRobot):
                 self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
 
                 self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-                my_coord = (self.me['x'], self.me['y'])
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
-            elif self.me['turn'] < 10:
-                my_coord = (self.me['x'], self.me['y'])
+            elif self.me['turn'] < 50:
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 self.log("Building a crusader at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
                 return self.build_unit(SPECS['CRUSADER'], goal_dir[0],goal_dir[1])
