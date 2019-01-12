@@ -1,5 +1,7 @@
 from random import *
 import util
+import math
+import time
 
 
 coord_to_dir = {
@@ -260,75 +262,110 @@ def chebychev_distance(x1,x2,y1,y2):
     x_dist = abs(x1- x2)
     return max(x_dist,y_dist)
 
-def astar_crusader(vis,loc,pass_map,goal,cost):
-    vbot = []
-    for bot in vis:
-        vbot.append(bot['x'],bot['y'])
+def astar(pprint,vis,full_map,start,goal,moves):
 
-    q = util.PriorityQueue()
-    q.push((loc[0],loc[1],0),0)
+    visible = []
+    for v in range(len(vis)):
+        if util.nodeHash(*start) != util.nodeHash(vis[v]['x'], vis[v]['x']):
+             visible.append(util.nodeHash(vis[v]['x'], vis[v]['x']))
 
-    size = len(pass_map)
+    # pprint(str(vis))
 
-    # False means visited or impassable here
+    size = len(full_map)
+    settled = []
     visited = []
-    wave = []
-    for i in range(len(pass_map)):
+    frontier = []
+    for i in range(size):
         row = []
-        wrow = []
-        for k in range(len(pass_map)):
-            wrow.append(1000)
-            if pass_map[i][k] == False:
-                row.append(1)
-            else:
-                row.append(0)
-        visited.append(row)
+        vrow = []
+        for k in range(size):
+            row.append(0)
+            vrow.append(0)
+        visited.append(vrow)
+        settled.append(row)
 
+    start_node = util.Node(None,*start)
+    end_node = util.Node(None,*goal)
+
+    frontier.append(start_node)
+
+    visited[start_node.y][start_node.x] = start_node
     j = -1
+    current_node = None
+    start_time = time.time()
+    expanded = 1
+    expanded_nodes = [start]
 
-    while q.isEmpty() == False and j <= 50:
+    while frontier != []:
         j += 1
-        (cx,cy,cs) = q.pop()
+        # print(current_node == frontier[0])
+        # pprint("Iteration: " + str(j) + " Nodes expanded: " + str(expanded))
+        # pprint("Nodes: " + str(expanded_nodes))
 
-        if not visited[cy][cx]:
-            visited[cy][cx] = 2
+        current_node = frontier[0]
+        current_index = 0
 
-            wave[cy][cx] = cs
+        for index, n in enumerate(frontier):
+            if n.f < current_node.f:
+                current_index = index 
+                current_node = n
 
-            for xi in range(-3,4):
-                for yi in range(-3,4):
-                    if xi**2 + yi**2 < 9:
-                        newx = cx + xi
-                        newy = cy + yi
+        frontier.pop(current_index)
+        settled[current_node.y][current_node.x] = 1
 
-                        if (newx > size-1 or newy > size-1 or 0 > newy or 0 > newx):
-                            continue
-                            
-                        if visited[newy][newx] == 1:
-                            continue
+        # print(j,current_node.x,current_node.y,current_node.f)
 
-                        if int(util.nodeHash(newx,newy)) in vbot:
-                            continue 
+        if util.nodeHash(current_node.x,current_node.y) == util.nodeHash(end_node.x,end_node.y) or j >= 20:
+            # pprint("COMPLETE")
+            path = []
+            current = current_node
+            while current != None:
+                path.insert(0,current)
+                current = current.parent
+            return path
 
-                        f = 1 + chebychev_distance(newx,goal[0],newy,goal[1]) + cs #+ (xi**2 + yi**2)*cost
-                        q.push((newx,newy,f),f)
+        children = []
+        for move in moves:
+            newx = current_node.x + move[0]
+            newy = current_node.y + move[1]
 
-    score = 1e32
-    action = (0,0)
-    for xi in range(-3,4):
-        for yi in range(-3,4):
-            if xi**2 + yi**2 < 9:
-                newx = loc[0] + xi
-                newy = loc[1] + yi
+            collision = False
+            for v in visible:
+                if util.nodeHash(newx,newy) == v:
+                    collision = True
 
-                if visited[newy][newx] == 1 or newx > size-1 or newy > size-1 or 0 > newy or 0 > newx:
-                    continue;
+            if collision:
+                continue
 
-                if x[newx][newy] < score:
-                    score = x[newx][newy]
-                    action = (xi,yi)
 
-    return action
+            if newx > size - 1 or newx < 0 or newy > size - 1 or newy < 0:
+                continue
+
+            # print(full_map[newy][newx])
+            if full_map[newy][newx] == False:
+                continue
+
+            new_node = util.Node(current_node,newx,newy)
+            children.append(new_node)
+
+
+        for child in children:
+
+            if settled[child.y][child.x]:
+                continue
+
+            child.g = child.g + 1
+            child.h = math.sqrt((child.y - end_node.y)**2 + (child.x - end_node.x)**2)
+            child.f = child.g + child.h
+
+            open_node = visited[child.y][child.x]
+            if open_node != 0:
+                if open_node.f < child.f:
+                    continue
+
+            frontier.append(child)
+            expanded_nodes.append((child.x,child.y))
+            expanded += 1
 
 
 

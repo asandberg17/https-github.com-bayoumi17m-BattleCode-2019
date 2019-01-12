@@ -18,7 +18,7 @@ class MyRobot(BCAbstractRobot):
     karboniteMining = True
 
     wave = []
-    homePath = []
+    homePath = (0,0)
     visited = []
     mapSize = 0
 
@@ -100,7 +100,6 @@ class MyRobot(BCAbstractRobot):
             #return self.move(*nav.goto(my_coord, self.destination, self.map, self.get_visible_robot_map(), self.already_been))
             self.log(goal_dir)
             return self.move(*goal_dir)
-            
                
         elif self.me['unit'] == SPECS['CASTLE']:
             # self.log("the map is "+ nav.symmetric(self.map))
@@ -111,7 +110,7 @@ class MyRobot(BCAbstractRobot):
                 self.log("Building a Prophet at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
                 return self.build_unit(SPECS['PROPHET'], goal_dir[0],goal_dir[1])
 
-            if self.me['turn'] < 3:
+            if self.me['turn'] < 4:
                 if not self.karboniteMining:
                     mapEnergy = self.get_fuel_map()
                     self.karboniteMining  = True
@@ -119,18 +118,20 @@ class MyRobot(BCAbstractRobot):
                     mapEnergy = self.get_karbonite_map()
                     self.karboniteMining = False
 
-                size = len(mapEnergy) -1
-                dist = 121
-                targetX = "0"
-                targetY = "0"
-                for i in range(-20,21):
-                    for k in range(-20,21):
-                        if self.me['y'] + i < 0 or self.me['x'] + k < 0 or self.me['y'] + i > size or self.me['x'] + k > size:
-                            continue
-                        if mapEnergy[self.me['y'] + i][self.me['x'] + k] and i**2 + k**2 < dist:
-                            targetX = str(self.me['x'] + k)
-                            targetY = str(self.me['y'] + i)
-                            dist = i**2 + k**2
+                # size = len(mapEnergy) -1
+                # dist = 121
+                # targetX = "0"
+                # targetY = "0"
+                # for i in range(-20,21):
+                #     for k in range(-20,21):
+                #         if self.me['y'] + i < 0 or self.me['x'] + k < 0 or self.me['y'] + i > size or self.me['x'] + k > size:
+                #             continue
+                #         if mapEnergy[self.me['y'] + i][self.me['x'] + k] and i**2 + k**2 < dist:
+                #             targetX = str(self.me['x'] + k)
+                #             targetY = str(self.me['y'] + i)
+                #             dist = i**2 + k**2
+                targetX, targetY = nav.get_closest_karbonite((self.me['x'],self.me['y']), mapEnergy)
+                targetX = str(targetX); targetY = str(targetY)
 
                 self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
 
@@ -149,22 +150,23 @@ class MyRobot(BCAbstractRobot):
             if self.me['turn'] == 1:
                 # Map Building
                 # fuelMap = self.fuel_map
-                passMap = self.map
-                # karbMap = self.karbonite_map
-                self.mapSize = len(passMap)
-                for y in range(self.mapSize):
-                    row = []
-                    vrow = []
-                    for x in range(self.mapSize):
-                        vrow.append(0)
-                        if passMap[y][x] == False:
-                            row.append(0)
-                        else:
-                            row.append(0)
-                    self.wave.append(row)
-                    self.visited.append(vrow)
+                self.homePath = (self.me['x'],self.me['y'])
 
-                # self.log("IMPORTANT0: " + str(self.visited[12][38]))
+                # passMap = self.map
+                # # karbMap = self.karbonite_map
+                # self.mapSize = len(passMap)
+                # for y in range(self.mapSize):
+                #     row = []
+                #     vrow = []
+                #     for x in range(self.mapSize):
+                #         vrow.append(0)
+                #         if passMap[y][x] == False:
+                #             row.append(0)
+                #         else:
+                #             row.append(0)
+                #     self.wave.append(row)
+                #     self.visited.append(vrow)
+
 
                 # Read Signal!
                 signal = ""
@@ -173,77 +175,23 @@ class MyRobot(BCAbstractRobot):
                         signal = str(botv['signal'])
                         break
 
-                # self.log("Signal: " + signal)
                 parsePoint = int(signal[0])
                 y = int(signal[parsePoint+1:])
                 x = int(signal[1:parsePoint+1])
+                # self.log("Signal is: " + signal + " and target is: " + str((x,y)))
 
-                self.wave[y][x] = 2
+                # self.wave[y][x] = 2
                 self.targetX = x
                 self.targetY = y
-                # self.log("IMPORTANT1: " + str(self.visited[12][38]))
+                # self.log("The target is: " + str((self.targetX,self.targetY)))
 
-            if self.me['turn'] == 2:
-                # start = time.time()
-                goal = (self.targetX,self.targetY,2)
-                q = util.Queue()
-                q.push(goal)
-                # j= 0
-
-                # self.log("IMPORTANT2: " + str(self.visited[12][38]))
-
-
-                while q.isEmpty() == False:
-                    # self.log(str(self.wave))
-                    # j += 1
-                    # self.log(str(j) + ", " + str((time.time() - start)*1000))
-                    
-                    (cx,cy,cs) = q.pop()
-                    # self.log(str(self.wave))
-                    # self.log("Position: " + str((cx,cy)) + ", Value: " +  str(self.visited[cy][cx]))
-
-                    if not self.visited[cy][cx]:
-                        self.visited[cy][cx] = 1
-                        self.wave[cy][cx] =  1 + cs
-                        for new_pos in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]: # Adjacent squares
-                            newx = new_pos[0] + cx
-                            newy = new_pos[1] + cy
-                            
-                            if (newx > self.mapSize-1 or newy > self.mapSize-1 or 0 > newy or 0 > newx):
-                                continue;
-                            if self.wave[newy][newx] == 1:
-                                continue;
-
-                            new_node = (newx,newy,self.wave[cy][cx])
-
-                #             # self.log(str(newx > size-1))
-                #             # self.log("visited: " + str((newx,newy)) + "~" + str(self.visited[newy][newx]))
-                #             # self.log(str(self.me['id']) + ": " + str(self.visited))
-                            
-                            if self.visited[newy][newx]:
-                                pass
-                            else:
-                                q.push(new_node)
-
-                curScore = self.wave[self.me['y']][self.me['x']]
-                newScore = curScore
-                action = (0,0)
-                
-                for moves in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
-                    newx = moves[0] + self.me['x']
-                    newy = moves[1] + self.me['y']
-                    if (newx > self.mapSize-1 or newy > self.mapSize-1 or 0 > newy or 0 > newx):
-                                continue;
-                    # self.log("Action: " + str(moves) + ", Cur: " + str(curScore) + ", New: " + str(self.wave[newy][newx]))
-
-                    if self.wave[newy][newx] < newScore and self.wave[newy][newx] != 1:
-                        newScore = self.wave[newy][newx]
-                        action = moves
-                
-
-
-                self.homePath.append(action)
-                return self.move(action[0],action[1])
+                moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
+                path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), (self.me['x'],self.me['y']), (self.targetX,self.targetY), moves)
+                # for node in path:
+                #     self.log("Path " + str((node.x,node.y)))
+                action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+                # self.log("Trying to move by: " + str(action) + " from " + str((self.me['x'],self.me['y'])))
+                return self.move(*action)
 
             if self.me['turn'] > 1:
 
@@ -257,54 +205,36 @@ class MyRobot(BCAbstractRobot):
                     energy = 'fuel'
                     capacity = SPECS['UNITS'][SPECS['PILGRIM']]['FUEL_CAPACITY']
 
-                botv_pos = []
-                for botv in self.get_visible_robots():
-                    botv_pos.append(util.nodeHash(botv.x,botv.y))
+                # botv_pos = []
+                # for botv in self.get_visible_robots():
+                #     botv_pos.append(util.nodeHash(botv.x,botv.y))
                     
-                if self.wave[self.me['y']][self.me['x']] == 3 and self.me[energy] < capacity:
+                if util.nodeHash(self.me['x'],self.me['y']) == util.nodeHash(self.targetX,self.targetY) and self.me[energy] < capacity:
                     # self.log("MINING")
-                    self.log(energy + " " + str(self.me[energy]) + "/" + str(capacity))
+                    # self.log(energy + " " + str(self.me[energy]) + "/" + str(capacity))
                     return self.mine()
 
-                elif self.me[energy] < capacity and self.wave[self.me['y']][self.me['x']] != 3:
-                    curScore = self.wave[self.me['y']][self.me['x']]
-                    newScore = curScore
-                    action = (0,0)
-                    size = len(self.wave) - 1
-                    for moves in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
-                        newx = moves[0] + self.me['x']
-                        newy = moves[1] + self.me['y']
+                elif self.me[energy] < capacity and util.nodeHash(self.me['x'],self.me['y']) != util.nodeHash(self.targetX,self.targetY):
+                    # self.log("Moving!!!")
+                    moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
+                    path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), (self.me['x'],self.me['y']), (self.targetX,self.targetY), moves)
+                    action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+                    return self.move(*action)
 
-                        if util.nodeHash(newx,newy) in botv_pos:
-                            continue;
+                elif self.me[energy] == capacity and util.nodeHash(*self.homePath) != util.nodeHash(self.me['x'],self.me['y']):
+                    # self.log("WORKING LOOP")
+                    moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
 
-                        if (newx > self.mapSize-1 or newy > self.mapSize-1 or 0 > newy or 0 > newx):
-                                continue;
-                        # self.log("Action: " + str(moves) + ", Cur: " + str(curScore) + ", New: " + str(self.wave[newy][newx]))
-
-                        if newy > size or newx > size or newy < 0 or newx < 0:
-                            continue
-
-                        if self.wave[newy][newx] < newScore and self.wave[newy][newx] != 1:
-                            newScore = self.wave[newy][newx]
-                            action = moves
-
-                    self.homePath.append(action)
-                    return self.move(action[0],action[1])
-
-                elif self.me[energy] == capacity and self.homePath != []:
-                    
-                    action = self.homePath.pop()
-                    action[0] = -action[0]
-                    action[1] = -action[1]
-                    return self.move(action[0],action[1])
+                    path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), (self.me['x'],self.me['y']), self.homePath, moves)
+                    action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+                    return self.move(*action)
 
 
                 else:
-                    
                     for botv in self.get_visible_robots():
                         if botv['unit'] == SPECS['CASTLE'] or botv['unit'] == SPECS['CHURCH']:
                             break;
+                    # self.log(str(self.me['karbonite']))
                     return self.give(botv['x'] - self.me['x'],botv['y'] - self.me['y'], self.me['karbonite'], self.me['fuel'])
 
 robot = MyRobot()
