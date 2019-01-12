@@ -332,6 +332,33 @@ def astar_crusader(vis,loc,pass_map,goal,cost):
 
 
 
+def defense(full_map, loc):
+    spoke=randint(1,4)
+    target=loc[0],loc[1]
+
+    if spoke==1:
+        target=target[0],target[1]+3
+        while not full_map[target[0]][target[1]]:
+            target=target[0],target[1]+1
+    if spoke==2:
+        target=target[0]+3,target[1]
+        while not full_map[target[0]][target[1]]:
+            target=target[0]+1,target[1]
+    if spoke==3:
+        target=target[0],target[1]-3
+        while not full_map[target[0]][target[1]]:
+            target=target[0],target[1]-1
+    if spoke==4:
+        target=target[0]-3,target[1]
+        while not full_map[target[0]][target[1]]:
+            target=target[0]-1,target[1]
+    return target
+
+
+
+
+
+
 
 
 
