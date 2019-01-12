@@ -2,6 +2,7 @@
  Data structures useful for implementing SearchAgents
 """
 import sys
+import math
 
 class Stack:
     "A container with a last-in-first-out (LIFO) queuing policy."
@@ -111,6 +112,33 @@ def countVisited(visited):
 
 def nodeHash(k1,k2):
     return ((k1+k2)*(k1+k2+1))/2 + k2
+
+
+def unHash(z):
+    w = math.floor((math.sqrt(8 * z + 1) - 1)/2)
+    t = (w**2 + w) / 2
+    y = int(z - t)
+    x = int(w - y)
+    # assert z != pair(x, y, safe=False):
+    return x, y
+
+
+class Node():
+    """A node class for A* Pathfinding"""
+
+    def __init__(self, parent=None, x=0, y=0):
+        self.parent = parent
+        self.x = x
+        self.y = y
+
+        self.g = 0
+        self.h = 0
+        self.f = 0
+
+    def __eq__(self, other):
+        if other == None:
+            return False
+        return self.x == other.x and self.y == other.y
 
 
 
