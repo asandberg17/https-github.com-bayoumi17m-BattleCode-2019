@@ -28,7 +28,7 @@ class MyRobot(BCAbstractRobot):
 
     def turn(self):
         if self.me['unit'] == SPECS['PROPHET']:
-            self.log("Crusader health: " + str(self.me['health']))
+            self.log("Prophet health: " + str(self.me['health']))
 
             visible = self.get_visible_robots()
 
@@ -56,7 +56,6 @@ class MyRobot(BCAbstractRobot):
             my_coord = (self.me['x'], self.me['y'])
             self.already_been[my_coord] = True
             # self.log(nav.symmetric(self.map)) #for some reason this would sometimes throw an error
-            # self.log("My destination is "+self.destination)
             if not self.destination:
                 self.log("trying to move")
                 self.destination = nav.defense(self.map, my_coord)
@@ -96,17 +95,33 @@ class MyRobot(BCAbstractRobot):
                 self.log('attacking! ' + str(r) + ' at loc ' + (r['x'] - self.me['x'], r['y'] - self.me['y']))
                 return self.attack(r['x'] - self.me['x'], r['y'] - self.me['y'])
 
-
+            my_coord = (self.me['x'], self.me['y'])    
             
-            # # The directions: North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest
-            my_coord = (self.me['x'], self.me['y'])
-            self.already_been[my_coord] = True
-            # self.log(nav.symmetric(self.map)) #for some reason this would sometimes throw an error
-            # self.log("My destination is "+self.destination)
             if not self.destination:
                 self.log("trying to move")
                 self.destination = nav.reflect(self.map, my_coord, nav.symmetric(self.map))
-            self.log("Trying to move to "+ self.destination)
+
+            self.log("My destination is "+self.destination)
+            if abs(self.destination[0]-my_coord[0]**2 +self.destination[1]-my_coord[1]**2) <10:
+                self.log("Holding my ground")
+                return
+
+            moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1),(0,-2),(0,2),(-2,0),(2,0),(2,-1),(-1,2),(2,1),(1,2),(-2,1),(1,-2),(-2,-1),(-1,-2),(2,2),(2,-2),(-2,2),(-2,-2),(0,3),(3,0),(-3,0),(0,-3)]
+            path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+            action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+            return self.move(*action)
+
+
+            
+            # # The directions: North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest
+            # my_coord = (self.me['x'], self.me['y'])
+            # self.already_been[my_coord] = True
+            # # self.log(nav.symmetric(self.map)) #for some reason this would sometimes throw an error
+            # # self.log("My destination is "+self.destination)
+            # if not self.destination:
+            #     self.log("trying to move")
+            #     self.destination = nav.reflect(self.map, my_coord, nav.symmetric(self.map))
+            # self.log("Trying to move to "+ self.destination)
 
             # goal_dir=nav.goto(my_coord, self.destination, self.map, self.get_visible_robot_map(), self.already_been)
             # x=0
@@ -142,10 +157,10 @@ class MyRobot(BCAbstractRobot):
             # loc=nav.apply_dir(my_coord,jump_dir)
             # self.log("this should not even be returning "+loc)
             # return self.move(*jump_dir)
-            goal_dir=nav.goto(my_coord, self.destination, self.map, self.get_visible_robot_map(), self.already_been)
-            #return self.move(*nav.goto(my_coord, self.destination, self.map, self.get_visible_robot_map(), self.already_been))
-            self.log(goal_dir)
-            return self.move(*goal_dir)
+            # goal_dir=nav.goto(my_coord, self.destination, self.map, self.get_visible_robot_map(), self.already_been)
+            # #return self.move(*nav.goto(my_coord, self.destination, self.map, self.get_visible_robot_map(), self.already_been))
+            # self.log(goal_dir)
+            # return self.move(*goal_dir)
                
         elif self.me['unit'] == SPECS['CASTLE']:
             # self.log("the map is "+ nav.symmetric(self.map))

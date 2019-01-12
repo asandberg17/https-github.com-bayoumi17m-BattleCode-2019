@@ -204,7 +204,7 @@ def spawn(loc,full_map,robot_map):
     return goal_dir
 
 def symmetric(full_map):
-    l=len(full_map)
+    l=len(full_map)-1
 
     coord1=randint(0,l),randint(0,l)
     coord1_h=coord1[0],l-1-coord1[1]
