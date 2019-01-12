@@ -287,8 +287,8 @@ def astar(pprint,vis,full_map,start,goal,moves):
     start_node = util.Node(None,*start)
     end_node = util.Node(None,*goal)
 
-    for v in vis:
-        settled[v['y']][v['x']] = 1
+    # for v in vis:
+    #     settled[v['y']][v['x']] = 1
 
     frontier.append(start_node)
 

@@ -183,13 +183,13 @@ class MyRobot(BCAbstractRobot):
 
             if self.me['turn'] < 3:
                 # Send location over castleTalk to other castles
-                # if self.me['turn'] == 1:
-                #     self.castle_talk(self.me['y'] + 1)
-                # else:
-                #     self.castle_talk(self.me['x'] + 1)
-                #     for i in range(len(self.castles)):
-                #         if self.castles[i].castle_talk - 1 >= 0:
-                #             self.castleLoc.append((None,self.castles[i].castle_talk- 1))
+                if self.me['turn'] == 1:
+                    self.castle_talk(self.me['y'] + 1)
+                else:
+                    self.castle_talk(self.me['x'] + 1)
+                    for i in range(len(self.castles)):
+                        if self.castles[i].castle_talk - 1 >= 0:
+                            self.castleLoc.append((None,self.castles[i].castle_talk- 1))
 
 
 
@@ -210,23 +210,27 @@ class MyRobot(BCAbstractRobot):
                 return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
             elif self.me['turn'] < 20:
                 
-                # if self.me['turn'] == 3:
-                #     for i in range(len(self.castles)):
-                #         if self.castles[i].castle_talk - 1 >= 0:
-                #             self.castleLoc[i] = (self.castles[i].castle_talk - 1, self.castleLoc[i][1])
+                if self.me['turn'] == 3:
+                    for i in range(len(self.castles)):
+                        if self.castles[i].castle_talk - 1 >= 0:
+                            self.castleLoc[i] = (self.castles[i].castle_talk - 1, self.castleLoc[i][1])
+
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 self.log("Building a crusader at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
                 return self.build_unit(SPECS['CRUSADER'], goal_dir[0],goal_dir[1])
+
             elif self.me['turn'] < 60:
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 self.log(self.me['turn'])
                 self.log("Building a Prophet at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
                 return self.build_unit(SPECS['PROPHET'], goal_dir[0],goal_dir[1])
+
             elif self.me['turn'] < 100:
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 self.log(self.me['turn'])
                 self.log("Building a Crusader at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
                 return self.build_unit(SPECS['CRUSADER'], goal_dir[0],goal_dir[1])
+                
             else:
                 pass
         
@@ -309,7 +313,7 @@ class MyRobot(BCAbstractRobot):
                     return self.mine()
 
                 elif self.me[energy] < capacity and util.nodeHash(self.me['x'],self.me['y']) != util.nodeHash(self.targetX,self.targetY):
-                    # self.log("Moving!!!")
+                    self.log("Moving!!!")
                     moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
                     path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), (self.me['x'],self.me['y']), (self.targetX,self.targetY), moves)
                     action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
