@@ -15,6 +15,10 @@ __pragma__('opov')
 # don't try to use global variables!!
 class MyRobot(BCAbstractRobot):
 
+    numCastles = 0
+    castles = []
+    castleLoc = []
+
     karboniteMining = True
 
     wave = []
@@ -165,13 +169,30 @@ class MyRobot(BCAbstractRobot):
         elif self.me['unit'] == SPECS['CASTLE']:
             # self.log("the map is "+ nav.symmetric(self.map))
             my_coord = (self.me['x'], self.me['y'])
-            if self.me['turn']<2:
+            if self.me['turn'] == 1:
+                for bot in self.get_visible_robot_map:
+                    if bot['unit'] == SPECS['CASTLE']:
+                        self.castleLoc.append(bot)
+                        numCastles += 1
+
+            if self.me['turn'] < -10:
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 self.log(self.me['turn'])
                 self.log("Building a Prophet at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
                 return self.build_unit(SPECS['PROPHET'], goal_dir[0],goal_dir[1])
 
-            if self.me['turn'] < 4:
+            if self.me['turn'] < 3:
+                # Send location over castleTalk to other castles
+                # if self.me['turn'] == 1:
+                #     self.castle_talk(self.me['y'] + 1)
+                # else:
+                #     self.castle_talk(self.me['x'] + 1)
+                #     for i in range(len(self.castles)):
+                #         if self.castles[i].castle_talk - 1 >= 0:
+                #             self.castleLoc.append((None,self.castles[i].castle_talk- 1))
+
+
+
                 if not self.karboniteMining:
                     mapEnergy = self.get_fuel_map()
                     self.karboniteMining  = True
@@ -179,18 +200,6 @@ class MyRobot(BCAbstractRobot):
                     mapEnergy = self.get_karbonite_map()
                     self.karboniteMining = False
 
-                # size = len(mapEnergy) -1
-                # dist = 121
-                # targetX = "0"
-                # targetY = "0"
-                # for i in range(-20,21):
-                #     for k in range(-20,21):
-                #         if self.me['y'] + i < 0 or self.me['x'] + k < 0 or self.me['y'] + i > size or self.me['x'] + k > size:
-                #             continue
-                #         if mapEnergy[self.me['y'] + i][self.me['x'] + k] and i**2 + k**2 < dist:
-                #             targetX = str(self.me['x'] + k)
-                #             targetY = str(self.me['y'] + i)
-                #             dist = i**2 + k**2
                 targetX, targetY = nav.get_closest_karbonite((self.me['x'],self.me['y']), mapEnergy)
                 targetX = str(targetX); targetY = str(targetY)
 
@@ -200,6 +209,11 @@ class MyRobot(BCAbstractRobot):
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
             elif self.me['turn'] < 20:
+                
+                # if self.me['turn'] == 3:
+                #     for i in range(len(self.castles)):
+                #         if self.castles[i].castle_talk - 1 >= 0:
+                #             self.castleLoc[i] = (self.castles[i].castle_talk - 1, self.castleLoc[i][1])
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 self.log("Building a crusader at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
                 return self.build_unit(SPECS['CRUSADER'], goal_dir[0],goal_dir[1])
@@ -215,7 +229,6 @@ class MyRobot(BCAbstractRobot):
                 return self.build_unit(SPECS['CRUSADER'], goal_dir[0],goal_dir[1])
             else:
                 pass
-                # self.log("Castle health: " + self.me['health'])
         
         elif self.me['unit'] == SPECS['PILGRIM']:
             if self.me['turn'] == 1:

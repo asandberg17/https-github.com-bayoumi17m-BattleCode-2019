@@ -264,10 +264,10 @@ def chebychev_distance(x1,x2,y1,y2):
 
 def astar(pprint,vis,full_map,start,goal,moves):
 
-    visible = []
-    for v in range(len(vis)):
-        if util.nodeHash(*start) != util.nodeHash(vis[v]['x'], vis[v]['x']):
-             visible.append(util.nodeHash(vis[v]['x'], vis[v]['x']))
+    # visible = []
+    # for v in range(len(vis)):
+    #     if util.nodeHash(*start) != util.nodeHash(vis[v]['x'], vis[v]['x']):
+    #          visible.append(util.nodeHash(vis[v]['x'], vis[v]['x']))
 
     # pprint(str(vis))
 
@@ -286,6 +286,9 @@ def astar(pprint,vis,full_map,start,goal,moves):
 
     start_node = util.Node(None,*start)
     end_node = util.Node(None,*goal)
+
+    for v in vis:
+        settled[v['y']][v['x']] = 1
 
     frontier.append(start_node)
 
@@ -313,7 +316,7 @@ def astar(pprint,vis,full_map,start,goal,moves):
         frontier.pop(current_index)
         settled[current_node.y][current_node.x] = 1
 
-        # print(j,current_node.x,current_node.y,current_node.f)
+        # pprint(j,current_node.x,current_node.y,current_node.f)
 
         if util.nodeHash(current_node.x,current_node.y) == util.nodeHash(end_node.x,end_node.y) or j >= 20:
             # pprint("COMPLETE")
@@ -330,11 +333,14 @@ def astar(pprint,vis,full_map,start,goal,moves):
             newy = current_node.y + move[1]
 
             collision = False
-            for v in visible:
-                if util.nodeHash(newx,newy) == v:
+            for v in vis:
+                # pprint("Robot's Position: " + str((v['x'],v['y'])))
+                # pprint(str(newx == v['x'] and newy == v['y']))
+                if util.nodeHash(newx,newy) == util.nodeHash(v['x'],v['y']):
                     collision = True
 
             if collision:
+                # pprint("collision")
                 continue
 
 
