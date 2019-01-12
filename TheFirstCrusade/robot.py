@@ -197,6 +197,16 @@ class MyRobot(BCAbstractRobot):
 
                 karbMiner = self.get_karbonite_map()[self.targetY][self.targetX]
                 # self.log("karbMiner: " + str(karbMiner))
+                drop_off = False
+                for botv in self.get_visible_robots():
+                    if botv['unit'] == SPECS['CASTLE'] or botv['unit'] == SPECS['CHURCH']:
+                        for giving in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
+                            if util.nodeHash(giving[0]+self.me['x'], giving[1]+self.me['y']) == util.nodeHash(botv['x'],botv['y']):
+                                drop_off = True
+                                break;
+
+                    if drop_off:
+                        break
 
                 if karbMiner:
                     energy = 'karbonite'
@@ -221,7 +231,7 @@ class MyRobot(BCAbstractRobot):
                     action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                     return self.move(*action)
 
-                elif self.me[energy] == capacity and util.nodeHash(*self.homePath) != util.nodeHash(self.me['x'],self.me['y']):
+                elif self.me[energy] == capacity and util.nodeHash(*self.homePath) != util.nodeHash(self.me['x'],self.me['y']) and not drop_off:
                     # self.log("WORKING LOOP")
                     moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
 
@@ -230,11 +240,8 @@ class MyRobot(BCAbstractRobot):
                     return self.move(*action)
 
 
-                else:
-                    for botv in self.get_visible_robots():
-                        if botv['unit'] == SPECS['CASTLE'] or botv['unit'] == SPECS['CHURCH']:
-                            break;
-                    # self.log(str(self.me['karbonite']))
+                elif drop_off and self.me[energy] == capacity:
+                    
                     return self.give(botv['x'] - self.me['x'],botv['y'] - self.me['y'], self.me['karbonite'], self.me['fuel'])
 
 robot = MyRobot()
