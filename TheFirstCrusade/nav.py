@@ -401,6 +401,32 @@ def defense(full_map, loc):
 
 
 
+def get_closest_resources(loc,map,robot_map,fuel_map,karbonite_map):
+    closest_resources=[]
+    k=get_closest_karbonite(loc,karbonite_map)
+    karb=True
+    k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
+    while k_dist<10:
+        closest_resources.append(k)
+        if karb==True:
+            k=get_closest_karbonite(loc,fuel_map)
+            k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
+            karb=False
+        else:
+            k=get_closest_karbonite(loc,karbonite_map)
+            k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
+            karb=True
+    if karb==True:
+        k=get_closest_karbonite(loc,fuel_map)
+        k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
+        karb=False
+    else:
+        k=get_closest_karbonite(loc,karbonite_map)
+        k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
+        karb=True
+    if k_dist<10:
+        closest_resources.append(k)
+
 
 
 

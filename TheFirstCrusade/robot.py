@@ -14,10 +14,13 @@ __pragma__('opov')
 
 # don't try to use global variables!!
 class MyRobot(BCAbstractRobot):
-
+    #for castles
     numCastles = 0
     castles = []
     castleLoc = []
+
+    pilgrims_built=0
+    closest_resources=[]
 
     karboniteMining = True
 
@@ -167,8 +170,13 @@ class MyRobot(BCAbstractRobot):
             # return self.move(*goal_dir)
                
         elif self.me['unit'] == SPECS['CASTLE']:
-            # self.log("the map is "+ nav.symmetric(self.map))
+            #initializing my coordinates
             my_coord = (self.me['x'], self.me['y'])
+            #checking if castle has not yet calculated closest resources
+            if len(closest_resources)==0
+                closest_resources=get_closest_resources(my_coord,self.map,self.get_visible_robot_map(),self.get_fuel_map(),self.get_karbonite_map())
+            
+            
             if self.me['turn'] == 1:
                 for bot in self.get_visible_robot_map:
                     if bot['unit'] == SPECS['CASTLE']:
