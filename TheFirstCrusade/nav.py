@@ -416,6 +416,7 @@ def get_closest_resources(loc,map,robot_map,fuel_map,karbonite_map):
             k=get_closest_karbonite(loc,karbonite_map)
             k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
             karb=True
+    #checking to make sure that the other type or resource doesnt have a deposit still in range
     if karb==True:
         k=get_closest_karbonite(loc,fuel_map)
         k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
@@ -426,6 +427,23 @@ def get_closest_resources(loc,map,robot_map,fuel_map,karbonite_map):
         karb=True
     if k_dist<10:
         closest_resources.append(k)
+    #now adding a final two locations, these will be the last two pilgrims the castle will send out and far enough away to build churches
+    i=0
+    while i<2:
+        if karb==True:
+            k=get_closest_karbonite(loc,fuel_map)
+            k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
+            karb=False
+        else:
+            k=get_closest_karbonite(loc,karbonite_map)
+            k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
+            karb=True
+        closest_resources.append(k)
+        i=i+1
+    return closest_resources
+
+    
+
 
 
 

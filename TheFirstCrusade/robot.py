@@ -173,8 +173,13 @@ class MyRobot(BCAbstractRobot):
             #initializing my coordinates
             my_coord = (self.me['x'], self.me['y'])
             #checking if castle has not yet calculated closest resources
-            if len(closest_resources)==0
-                closest_resources=get_closest_resources(my_coord,self.map,self.get_visible_robot_map(),self.get_fuel_map(),self.get_karbonite_map())
+            if len(closest_resources)==0:
+                closest_resources=nav.get_closest_resources(my_coord,self.map,self.get_visible_robot_map(),self.get_fuel_map(),self.get_karbonite_map())
+            #this will return all the resources in range 10 of the castle and then two more. The castle will keep track of how many pilgrims
+            #it sends and send them to the corresponding index of closest_resource until if it builds another pilgrim number of pilgrims 
+            #sent would be greater than len(closest_resources)
+
+
             
             
             if self.me['turn'] == 1:
