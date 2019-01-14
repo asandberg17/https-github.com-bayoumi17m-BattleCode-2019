@@ -406,6 +406,10 @@ def get_closest_resources(loc,map,robot_map,fuel_map,karbonite_map):
     k=get_closest_karbonite(loc,karbonite_map)
     karb=True
     k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
+
+    #need to get a list of any castles or churches nearby
+
+    #also need to get a way to 
     while k_dist<10:
         closest_resources.append(k)
         if karb==True:
@@ -440,7 +444,40 @@ def get_closest_resources(loc,map,robot_map,fuel_map,karbonite_map):
             karb=True
         closest_resources.append(k)
         i=i+1
+
+    #need to make sure churches dont send pilgrims to resources within ten of a castle or other church
+    #use self.get_robot(id) to figure out the type or robot
+
     return closest_resources
+
+#first send pilgrims to nearest resources alternating between type  when the robots get there and are full they check if there is 
+#a church within radius 5, if they can build a church they then see if there are any other resources within radius 5 if there are
+#find the middle and test if it is viable, if not move slightly
+def church_or_no(self,loc,map,visible,robot_map,fuel_map,karbonite_map,total_karb,total_fuel,self_tank):
+    up=True
+    churches = []
+    #could make this a little faster by making it a while loop that exists once weve reached the length of visible or returns once we find a church
+    for r in visible:
+        if not self.is_visible(r):
+            # this robot isn't actually in our vision range, it just turned up because we heard its radio broadcast. disregard.
+            continue
+        # now all in vision range, can see x, y etc
+        dist = (r['x'] - self.me['x'])**2 + (r['y'] - self.me['y'])**2
+        #check of 
+        if r['team'] == self.me['team'] and r['unit']=='1':
+            churches.append(r)
+    return not churches
+#returns a boolean on whether or not a church needs to be built
+#when were standing on the location to build a church we need to check once more that it is still necessary and that another robot
+#hasnt built one before
+
+#return the coordinates of a good buidling site
+def church_build_site(loc,map,fuel_map,Karbonite_map,robot_map):
+    dir=build_site[0]-loc[0],build_site[1]-loc[1]
+    if is_passable(fmap, loc, dir, robot_map=None)==False:
+    #the position wasn't good try another
+
+def aiming(loc,map,robot_map)
 
     
 
