@@ -482,7 +482,7 @@ def church_build_site(loc,map,fuel_map,karbonite_map):
     y_start=loc[1]-2
     for x in range(x_start,loc[0]+3):
         for y in range (y_start,loc[1]+3):
-            if fuel_map[y][x]==True or karbonite_map[y][x]==True:
+            if fuel_map[y][x]==True or karbonite_map[y][x]==True and x<len(map) and y<len(map) and x>-1 and y>-1:
                 resources.append([x,y])
     #now we have all the tiles nearby that have resources, have to find a sort of center
     x_cent=0
