@@ -419,7 +419,7 @@ class MyRobot(BCAbstractRobot):
                     self.should_build_church=nav.church_or_no(self,(self.me['x'],self.me['y']),visible)
                     if not self.should_build_church:
                         #now there is a church in range and it should go there
-                        self.closest_dropoff=nav.closest_dropoff(self,visible)
+                        self.closest_dropoff=nav.get_closest_dropoff(self,visible)
                     #now move to where the dropoff point should be
                     path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
 
@@ -434,7 +434,7 @@ class MyRobot(BCAbstractRobot):
                     action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                     return self.move(*action)
 
-                elif self.me[energy] == capacity and util.nodeHash(*self.closest_dropoff != util.nodeHash(*my_loc) and not drop_off:
+                elif self.me[energy] == capacity and util.nodeHash(*self.closest_dropoff) != util.nodeHash(*my_loc) and not drop_off:
                     # self.log("WORKING LOOP")
                     visible = self.get_visible_robots()
                     moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
@@ -452,5 +452,5 @@ class MyRobot(BCAbstractRobot):
                 elif drop_off and self.me[energy] == capacity:
                     
                     return self.give(botv['x'] - self.me['x'],botv['y'] - self.me['y'], self.me['karbonite'], self.me['fuel'])
-
+            
 robot = MyRobot()

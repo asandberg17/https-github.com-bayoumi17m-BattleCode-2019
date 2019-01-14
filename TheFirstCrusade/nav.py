@@ -408,6 +408,10 @@ def get_closest_resources(loc,map,robot_map,fuel_map,karbonite_map):
     k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
 
     #need to get a list of any castles or churches nearby
+    #the radius for any castle if half of the length of the map, if any church is outside that radius it should send pilgrims to 
+    #any resource outside of a radius of say five and that pilgrim will build another church, so churches should only build pilgrims if theyre
+    #out of the radius of castles
+
 
     #also need to get a way to 
     while k_dist<10:
@@ -454,7 +458,6 @@ def get_closest_resources(loc,map,robot_map,fuel_map,karbonite_map):
 #a church within radius 5, if they can build a church they then see if there are any other resources within radius 5 if there are
 #find the middle and test if it is viable, if not move slightly
 def church_or_no(self,map,visible):
-    up=True
     churches = []
     #could make this a little faster by making it a while loop that exists once weve reached the length of visible or returns once we find a church
     for r in visible:
@@ -462,7 +465,6 @@ def church_or_no(self,map,visible):
             # this robot isn't actually in our vision range, it just turned up because we heard its radio broadcast. disregard.
             continue
         # now all in vision range, can see x, y etc
-        dist = (r['x'] - self.me['x'])**2 + (r['y'] - self.me['y'])**2
         #check of 
         if r['team'] == self.me['team'] and r['unit']=='1':
             churches.append(r)
@@ -490,13 +492,13 @@ def church_build_site(loc,map,fuel_map,karbonite_map):
     for i in range(len(resources)):
         x_cent=x_cent+resources[i][0]
         y_cent=y_cent+resources[i][1]
-    x_cent=int(x-cent/len(resources))
+    x_cent=int(x_cent/len(resources))
     y_cent=int(y_cent/len(resources))
     site=(x_cent,y_cent)
     #we now have the geographical middle but it may not be a whole number and it may not be a buildable location
     dir=[(1,1),(-1,-1),(0,1),(1,0),(0,-1),(-1,0),(0,2),(2,0),(0,-2),(2,0)]
     i=0
-    while map[site[0][site[1]] !=True or fuel_map[site[0]][site[1]] or karbonite_map[site[0]][site[1]] and i<len(dir):
+    while map[site[1]][site[0]] !=True or fuel_map[site[1]][site[0]] or karbonite_map[site[1]][site[0]] and i<len(dir):
         site=apply_dir(site,dir[i])
         i=i+1
     return site
@@ -520,6 +522,7 @@ def get_closest_dropoff(self, visible):
 
 
 def aiming(loc,map,robot_map):
+    return None
 
     
 
