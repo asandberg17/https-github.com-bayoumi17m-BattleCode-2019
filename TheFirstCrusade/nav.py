@@ -257,10 +257,10 @@ def symmetric(full_map):
                                             return True
     return False
 
-def chebychev_distance(x1,x2,y1,y2):
-    y_dist = abs(y1 - y2)
-    x_dist = abs(x1- x2)
-    return max(x_dist,y_dist)
+def distance(x1,y1):
+    x_dist = x1[0] - y1[0]
+    y_dist = x1[1] - y1[0] 
+    return x_dist**2 + y_dist**2
 
 def astar(pprint,vis,full_map,start,goal,moves):
 
