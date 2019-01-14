@@ -478,11 +478,11 @@ def church_build_site(loc,map,fuel_map,karbonite_map):
     #loop through grid around loc
     # center = loc[0]-2,loc[1]-2
     resources=[]
-    x=loc[0]-2
-    y=loc[1]-2
-    for x in range(loc[0]+3):
-        for y in range (loc[1]+3):
-            if fuel_map[x][y]==True or karbonite_map[x][y]==True:
+    x_start=loc[0]-2
+    y_start=loc[1]-2
+    for x in range(x_start,loc[0]+3):
+        for y in range (y_start,loc[1]+3):
+            if fuel_map[y][x]==True or karbonite_map[y][x]==True:
                 resources.append([x,y])
     #now we have all the tiles nearby that have resources, have to find a sort of center
     x_cent=0
@@ -500,6 +500,18 @@ def church_build_site(loc,map,fuel_map,karbonite_map):
         site=apply_dir(site,dir[i])
         i=i+1
     return site
+
+def get_closest_dropoff(self, visible):
+    for r in visible:
+        if not self.is_visible(r):
+            # this robot isn't actually in our vision range, it just turned up because we heard its radio broadcast. disregard.
+            continue
+        # now all in vision range, can see x, y etc
+        dist = (r['x'] - self.me['x'])**2 + (r['y'] - self.me['y'])**2
+        #check of 
+        if r['team'] == self.me['team'] and r['unit']=='1':
+            churches.append(r)
+
 
 def aiming(loc,map,robot_map):
 
