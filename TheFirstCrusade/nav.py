@@ -220,15 +220,6 @@ def symmetric(full_map):
     while full_map[coord4[1]][coord4[0]]:
         coord4=randint(0,l),randint(0,l)
     coord4_h=coord4[0],l-1-coord4[1]
-    while full_map[coord5[1]][coord5[0]]:
-        coord5=randint(0,l),randint(0,l)
-    coord5_h=coord5[0],l-1-coord5[1]
-    while full_map[coord6[1]][coord6[0]]:
-        coord6=randint(0,l),randint(0,l)
-    coord6_h=coord4[0],l-1-coord6[1]
-    while full_map[coord7[1]][coord7[0]]:
-        coord7=randint(0,l),randint(0,l)
-    coord7_h=coord7[0],l-1-coord7[1]
 
 
 
