@@ -220,11 +220,7 @@ class MyRobot(BCAbstractRobot):
             # return self.move(*goal_dir)
                
         elif self.me['unit'] == SPECS['CASTLE']:
-<<<<<<< HEAD
             self.log("I AM A CASTLE HEAR ME ROAR")
-=======
-            self.log(str(self.get_visible_robots()))
->>>>>>> 2e74c415dab6d85a5c34cefe0d6df4c04ac6c031
             #initializing my coordinates
             my_coord = (self.me['x'], self.me['y'])
             if self.coolDown > 0:
@@ -301,7 +297,7 @@ class MyRobot(BCAbstractRobot):
                 if not self.resources_sphere:
                     karbonite_map=self.get_karbonite_map()
                     fuel_map=self.get_fuel_map()
-                    self.resources_sphere=nav.get_closest_resources(my_coord,self.map,karbonite_map,fuel_map)
+                    self.resources_sphere=nav.get_closest_resources(my_coord,self.get_passable_map(),karbonite_map,fuel_map)
                     self.log(self.resources_sphere)
                 #sending pilgrim its target
                 targetX, targetY = self.resources_sphere[self.pilgrims_built]
@@ -348,7 +344,7 @@ class MyRobot(BCAbstractRobot):
 
                     # self.log(str(self.castleLoc))
 
-                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                #goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 # self.log(self.me['turn'])
                 # if self.fuel > self.numCastles*SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite > self.numCastles*SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE']:
                 #     self.log("Building a Prophet at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
@@ -442,6 +438,8 @@ class MyRobot(BCAbstractRobot):
                     return self.mine()
                 
                 elif self.should_build_church and not self.build_site[0]-my_loc[0]<2 and not self.build_site[1]-my_loc[1]<2:
+                    # This is always False unless the self.build_site attribute is to the lower right of pilgrim location! 
+                    # This is because the value will only be greater than two is the location is > 2 to the lower right diagonal (or 8r^2)
                     self.log('checking if a church is necessary')
                     #check if a church is still necessary
                     visible=self.get_visible_robots()
@@ -469,7 +467,7 @@ class MyRobot(BCAbstractRobot):
                     self.build_site=nav.church_build_site(my_loc,self.map,self.get_fuel_map(),self.get_karbonite_map())
                     self.closest_dropoff=self.build_site
                     self.log("trying to build a church at "+self.build_site)
-                    return self.build_unit(1,self.build_site[0]-my_loc[0],self.build_site[1]-my_loc[1])
+                    return self.build_unit(SPECS['CHURCH'],self.build_site[0]-my_loc[0],self.build_site[1]-my_loc[1])
 
                 elif self.me[energy] < capacity and util.nodeHash(self.me['x'],self.me['y']) != util.nodeHash(self.targetX,self.targetY):
                     self.log("Moving!!!")
@@ -479,7 +477,7 @@ class MyRobot(BCAbstractRobot):
                     return self.move(*action)
 
 
-                #FOR SOME REASON THIS WAS NOT ASSIGNGIN THINGS WELL
+                #FOR SOME REASON THIS WAS NOT ASSIGNING THINGS WELL
                 elif self.me[energy] == capacity and util.nodeHash(*self.closest_dropoff) != util.nodeHash(*my_loc) and not drop_off:
                     self.log('I got this far! Im full')
                     # self.log("WORKING LOOP")
@@ -494,7 +492,7 @@ class MyRobot(BCAbstractRobot):
                         self.closest_dropoff=self.build_site
                     if self.should_build_church and self.build_site[0]-my_loc[0]<2 and self.build_site[1]-my_loc[1]<2:
                         self.log("trying to build a church at "+self.build_site)
-                        return self.build_unit(1,self.build_site[0]-my_loc[0],self.build_site[1]-my_loc[1])
+                        return self.build_unit(SPECS['CHURCH'],self.build_site[0]-my_loc[0],self.build_site[1]-my_loc[1])
                     
 
                     path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
