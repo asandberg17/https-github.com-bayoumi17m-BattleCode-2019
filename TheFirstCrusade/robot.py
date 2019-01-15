@@ -22,6 +22,11 @@ class MyRobot(BCAbstractRobot):
     coolDown = 0
     resources_sphere=[]
 
+    defense = True
+    # Make parent the id of the Castle or centroid bot
+    defense_fields = {'parent' : None, 'level': 1, 'state': 'FOLLOW', 'branch': 0, 'branch_type': 'active', 'length': util.crossLength()}
+    defending = False
+
     pilgrims_built=0
     closest_resources=[]
 
@@ -51,12 +56,19 @@ class MyRobot(BCAbstractRobot):
 
             # get attackable robots
             attackable = []
+            castle_loc = (-1,-1)
+            in_vision = []
+
             for r in visible:
                 # x = 5
                 if not self.is_visible(r):
                     # this robot isn't actually in our vision range, it just turned up because we heard its radio broadcast. disregard.
                     continue
                 # now all in vision range, can see x, y etc
+                if r['unit'] == SPECS['CASTLE'] and self.me['team'] == r['team']:
+                    castle_loc = (r['x'],r['y'])
+
+                in_vision.append(r)
                 dist = (r['x'] - self.me['x'])**2 + (r['y'] - self.me['y'])**2
                 if r['team'] != self.me['team'] and SPECS['UNITS'][SPECS["PROPHET"]]['ATTACK_RADIUS'][0] <= dist <= SPECS['UNITS'][SPECS["PROPHET"]]['ATTACK_RADIUS'][1]:
                     attackable.append(r)
@@ -84,10 +96,18 @@ class MyRobot(BCAbstractRobot):
             # self.log(nav.symmetric(self.map)) #for some reason this would sometimes throw an error
             if not self.destination:
                 self.log("trying to move")
-                self.destination = nav.defense(self.get_passable_map(), self.get_visible_robot_map(), my_coord)
+                # self.log(str(castle_loc == (-1,-1)))
+                if castle_loc == (-1,-1):
+                    self.destination = nav.defense(self.get_passable_map(), self.get_visible_robot_map(), my_coord)
+                else:
+                    self.log("Found Castle")
+                    # self.destination = nav.defense(self.get_passable_map(), self.get_visible_robot_map(), my_coord)
+                    self.destination = nav.defense_2(self.log, self.get_passable_map(), castle_loc, in_vision, self.defense_fields) 
+
             if my_coord[0]==self.destination[0] and my_coord[1]==self.destination[1]:
                 self.log("CURRENTLY STANDING AT "+my_coord)
                 self.log("DEFENDING MY DESTINATION AT "+self.destination)
+                self.defending = True
                 return
             self.log("Trying to move to "+ self.destination)
             path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
@@ -328,6 +348,7 @@ class MyRobot(BCAbstractRobot):
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 self.pilgrims_built=self.pilgrims_built+1
                 return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+<<<<<<< HEAD
 
             elif self.me['turn'] < 30:
 
@@ -348,10 +369,11 @@ class MyRobot(BCAbstractRobot):
 
                 #goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 # self.log(self.me['turn'])
+
                 # if self.fuel > self.numCastles*SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite > self.numCastles*SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE']:
                 #     self.log("Building a Prophet at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
                 #     return self.build_unit(SPECS['PROPHET'], goal_dir[0],goal_dir[1])
-                
+
             # elif self.me['turn'] % 3 == 0:
             #     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
             #     # self.log(self.me['turn'])

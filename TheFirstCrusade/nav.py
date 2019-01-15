@@ -295,7 +295,6 @@ def astar(pprint,vis,full_map,start,goal,moves):
     visited[start_node.y][start_node.x] = start_node
     j = -1
     current_node = None
-    start_time = time.time()
     expanded = 1
     expanded_nodes = [start]
 
@@ -397,10 +396,90 @@ def defense(full_map, bot_map, loc):
             target=target[0]-1,target[1]
     return target
 
-def defense_2(full_map, castle_loc, visible):
-    pass
+def defense_2(pprint, full_map, castle_loc, visible, defense_fields):
+    pprint("Starting!")
+    vis = []
+    for i in range(8320):
+        vis.append(0)
+
+    for bot in visible:
+        vis[int(util.nodeHash(bot['x'],bot['y']))] = 1
+
+    pos = castle_loc
+    initial_branch = util.crossBranch()
+    pprint("Before the loop")
+    start = time.time()
+    timer = time.time() - start
+    while defense_fields['state'] != 'STOP' and timer*1000 < 30:
+        # pprint("Time: " + timer)
+        pprint("Pos: " + pos)
+        if defense_fields['state'] == 'EXPAND':
+            if not full_map[pos[1]][pos[0]]:
+                # Case 1: Position is impassable
+                if castle_loc[1] > len(full_map) // 2 and castle_loc[0] > len(full_map) // 2:
+                    while not full_map[pos[1]][pos[0]]:
+                        pos = pos[0] - 1, pos[1] - 1
+                elif castle_loc[1] > len(full_map) // 2 and castle_loc[0] < len(full_map) // 2:
+                    while not full_map[pos[1]][pos[0]]:
+                        pos = pos[0] + 1, pos[1] - 1
+                elif castle_loc[1] < len(full_map) // 2 and castle_loc[0] > len(full_map) // 2:
+                    while not full_map[pos[1]][pos[0]]:
+                        pos = pos[0] - 1, pos[1] + 1
+                elif castle_loc[1] < len(full_map) // 2 and castle_loc[0] < len(full_map) // 2:
+                    while not full_map[pos[1]][pos[0]]:
+                        pos = pos[0] + 1, pos[1] + 1
+
+                
+            if vis[int(util.nodeHash(*pos))]:
+                pprint("SOMEONES HOME")
+                # Case 2: Position has already been taken by another bot
+                # if defense_fields['level'] > 2:
+                #     # Sub-case: Already filled branch
+                #     angle = util.crossAngle(util.crossBranch())
+                #     pos = math.cos(angle)*util.crossLength(), math.sin(angle)*util.crossLength()
+                #     if vis[int(util.nodeHash(*pos))]:
+                #         # Sub-sub-case: If new branch has already been expanded and we see that someone is there
+                #         defense_fields = {'parent' : None, 'level': 1, 'state': 'FOLLOW', 'branch': 0, 'branch_type': 'active', 'length': util.crossLength()}
+                #     else:
+                #         # Sub-sub-case: New Diamond has not been started
+                #         defense_fields['level'] = 0
+                #         defense_fields['state'] = 'STOP'
+                #         defense_fields['branch_type'] = 'head'
+
+                # sub case: unfilled branch
+                defense_fields['level'] += 1
+                # defense_fields['branch'] = util.crossBranch()
+                # defense_fields['length'] = defense_fields['length']*util.crossScale()
+                defense_fields['state'] = 'FOLLOW'
 
 
+            else:
+                # Case 3: Resource location? (Edge Case we ignore for now)
+
+                # Case 4: Reach Expansion destination
+                defense_fields['state'] = 'STOP'
+
+        elif defense_fields['state'] == 'FOLLOW':
+
+            defense_fields['branch'] = util.crossBranch()
+            if defense_fields['branch_type'] != 'head':
+                defense_fields['state'] = 'EXPAND'
+                defense_fields['length'] = util.crossScale()*defense_fields['length']
+                angle = util.crossAngle(defense_fields['branch'])
+                # pprint("Angle is " + angle + ", Cos and Sine respectively: " + (math.cos(angle),math.sin(angle)))
+                x, y = math.cos(angle)*defense_fields['length'], math.sin(angle)*defense_fields['length']
+                # pprint("X is " + x + ", Y is " + y)
+                pos = int(round(pos[0]+x,0)), int(round(pos[1]+y,0))
+            else:
+                defense_fields['length'] = util.crossScale()*defense_fields['length']
+                defense_fields['level'] += 1
+            # Still need to do case analysis
+
+        timer = time.time() - start
+
+    defense_pos = pos
+    pprint("Final Pos: " + defense_pos)
+    return defense_pos
 
 
 def get_closest_resources(loc,map,fuel_map,karbonite_map):
@@ -526,8 +605,48 @@ def get_closest_dropoff(self, visible):
                 best=r
     return best['x'],best['y']
 
-def aiming(loc,map,robot_map):
-    return None
+def aiming(loc, map, visible, team, attackmin, attackmax):
+    attkmax = int(math.sqrt(attackmax))
+    attkmin = int(math.sqrt(attkmin))
+
+    attack_map = []
+    for i in range(-attkmax,attkmax+1):
+        row = []
+        for k in range(-attkmax,attkmax+1):
+            row.append(0)
+        attack_map.append(row)
+
+    size = len(attack_map)
+
+    attack_map[len(attack_map) // 2][len(attack_map) // 2] = -10
+    centroid = (len(attack_map) // 2, len(attack_map) // 2)
+
+    for botv in visible:
+        rel_pos = (centroid[0] + (botv['x'] - loc[0]), centroid[1] + (botv['y'] - loc[1]))
+        for i in range(-1,2):
+            for k in range(-1,2):
+                attk_map_pos = (rel_pos[0] + i, rel_pos[1] + k)
+                if attk_map_pos[0] < 0 or attk_map_pos[0] >= size or attk_map_pos[1] < 0 or attk_map_pos >= size:
+                    continue
+
+                if botv['team'] != team:
+                    attack_map[attk_map_pos[1]][attk_map_pos[0]] += 1
+                else:
+                    attack_map[attk_map_pos[1]][attk_map_pos[0]] -= 1
+
+    max_pos = centroid
+    for i in range(size):
+        for k in range(size):
+            if attack_map[max_pos[1]][max_pos[0]] < attack_map[i][k]:
+                max_pos = (k,i)
+
+    return (max_pos[0] - centroid[0], max_pos[1] - centroid[1])
+
+
+
+
+
+
 
     
 

@@ -2,6 +2,7 @@
  Data structures useful for implementing SearchAgents
 """
 import math
+import random
 
 class Stack:
     "A container with a last-in-first-out (LIFO) queuing policy."
@@ -130,6 +131,18 @@ class Node():
         if other == None:
             return False
         return self.x == other.x and self.y == other.y
+
+def crossScale():
+    return 1/3
+
+def crossBranch():
+    return random.randint(1,4)
+
+def crossLength():
+    return 9
+
+def crossAngle(branch):
+    return math.pi*branch / 2
 
 
 
