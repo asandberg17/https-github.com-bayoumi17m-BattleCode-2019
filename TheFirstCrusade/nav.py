@@ -259,7 +259,7 @@ def symmetric(full_map):
 
 def distance(x1,y1):
     x_dist = x1[0] - y1[0]
-    y_dist = x1[1] - y1[0] 
+    y_dist = x1[1] - y1[1] 
     return x_dist**2 + y_dist**2
 
 def astar(pprint,vis,full_map,start,goal,moves):
@@ -410,14 +410,14 @@ def get_closest_resources(loc,map,fuel_map,karbonite_map):
     #ill get the closest resources in a radius of 25, then ill go through that list and make all the resources in a radius of two,
     #then each castle or church should send pilgrims to any in their radius two circle then send three more out to the next two elements
     #on the radius 25 list
-    x_start=loc[0]-25
-    y_start=loc[1]-25
+    x_start=loc[0]-len(map)/2
+    y_start=loc[1]-len(map)/2)
     if x_start<0:
         x_start=0
     if y_start<0:
         y_start=0
-    x_end=loc[0]+25
-    y_end=loc[1]+25
+    x_end=loc[0]+len(map)/2
+    y_end=loc[1]+len(map)/2
     if x_end>len(map):
         x_end=len(map)
     if y_end>len(map):
@@ -443,15 +443,16 @@ def get_closest_resources(loc,map,fuel_map,karbonite_map):
         for y in range(y_start,y_end):
             if fuel_map[y][x] or karbonite_map[y][x]:
                 closest_resources.append([x,y])
-    closest_resources.append(closest_resources_large[len(closest_resources_large)-1])
-    closest_resources.append(closest_resources_large[len(closest_resources_large)-2])
+
+
+    #now have order both lists by distance
 
     return closest_resources
 
 #first send pilgrims to nearest resources alternating between type  when the robots get there and are full they check if there is 
 #a church within radius 5, if they can build a church they then see if there are any other resources within radius 5 if there are
 #find the middle and test if it is viable, if not move slightly
-def church_or_no(me,map,visible):
+def church_or_no(me,loc,map,visible):
     churches = []
     #could make this a little faster by making it a while loop that exists once weve reached the length of visible or returns once we find a church
     for r in visible:
@@ -460,7 +461,11 @@ def church_or_no(me,map,visible):
             continue
         # now all in vision range, can see x, y etc
         #check of 
-        if r['team'] == me.me['team'] and r['unit']=='1' or r['unit']=='0':
+        bot_loc=r['x'],r['y']
+        dist=distance(bot_loc,loc)
+        # pprint('i am this far away'+dist +'from a bot that is at'+bot_loc)
+        # pprint('and i am at '+loc)
+        if r['team'] == me.me['team'] and (r['unit']=='1' or r['unit']=='0') and dist<6:
             churches.append(r)
 
     # pprint(str(churches))
@@ -474,7 +479,7 @@ def church_or_no(me,map,visible):
 
 #return the coordinates of a good buidling site
 #use self.get_visible_robot_map() for this
-def church_build_site(loc,map,fuel_map,karbonite_map):
+def church_build_site(pprint,loc,map,fuel_map,karbonite_map):
     #like attackable want to get all the tiles that are in vision that have resources
     #loop through grid around loc
     # center = loc[0]-2,loc[1]-2
@@ -491,6 +496,7 @@ def church_build_site(loc,map,fuel_map,karbonite_map):
     for i in range(len(resources)):
         x_cent=x_cent+resources[i][0]
         y_cent=y_cent+resources[i][1]
+    pprint('the number of resources found was '+len(resources) +'i am at '+loc)
     x_cent=int(x_cent/len(resources))
     y_cent=int(y_cent/len(resources))
     site=(x_cent,y_cent)
