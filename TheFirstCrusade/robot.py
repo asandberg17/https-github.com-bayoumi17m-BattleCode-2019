@@ -331,9 +331,13 @@ class MyRobot(BCAbstractRobot):
             #this will return all the resources in range 10 of the castle and then two more. The castle will keep track of how many pilgrims
             #it sends and send them to the corresponding index of closest_resource until if it builds another pilgrim number of pilgrims 
             #sent would be greater than len(closest_resources)
+            attacker_return = False
             if self.me['turn'] >= 3:
                 terminated = False
                 for bot in self.get_visible_robots():
+                    if self.is_visible(bot):
+                        if bot['unit'] == SPECS['CRUSADER'] or bot['unit'] == SPECS['PREACHER']:
+                            attacker_return = True
                     if bot.castle_talk == 111 and self.coolDown == 0:
                         self.log("terminated")
                         terminated = True
@@ -363,10 +367,10 @@ class MyRobot(BCAbstractRobot):
             my_coord = (self.me['x'], self.me['y'])
             # self.log(str(SPECS['UNITS'][SPECS['CRUSADER']]))
 
-            if self.castles != []:
+            if self.castles != [] and attacker_return:
                 attack_castle = self.castleLoc[self.castles[0]]
                 self.log(str(attack_castle))
-                self.signal(int(util.nodeHash(*attack_castle)),10)
+                self.signal(int(util.nodeHash(*attack_castle)),100)
             else:
                 pass
                 # self.log("HOW DID THIS HAPPEN!!")
