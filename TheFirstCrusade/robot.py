@@ -370,7 +370,7 @@ class MyRobot(BCAbstractRobot):
             if self.castles != [] and self.me['turn'] % 30 != 0:
                 attack_castle = self.castleLoc[self.castles[0]]
                 self.log(str(attack_castle))
-                self.signal(int(util.nodeHash(*attack_castle)),100)
+                self.signal(int(util.nodeHash(*attack_castle)),10)
             else:
                 pass
                 # self.log("HOW DID THIS HAPPEN!!")
