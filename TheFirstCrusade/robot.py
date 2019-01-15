@@ -27,7 +27,10 @@ class MyRobot(BCAbstractRobot):
     karboniteMining = True
 
     wave = []
+    should_build_church=False
+    build_site=(0,0)
     homePath = (0,0)
+    closest_dropoff=(0,0)
     visited = []
     mapSize = 0
 
