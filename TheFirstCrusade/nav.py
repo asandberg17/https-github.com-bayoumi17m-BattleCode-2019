@@ -490,7 +490,7 @@ def get_closest_resources(loc,map,fuel_map,karbonite_map):
     #then each castle or church should send pilgrims to any in their radius two circle then send three more out to the next two elements
     #on the radius 25 list
     x_start=loc[0]-len(map)/2
-    y_start=loc[1]-len(map)/2)
+    y_start=loc[1]-len(map)/2
     if x_start<0:
         x_start=0
     if y_start<0:
