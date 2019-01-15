@@ -219,11 +219,11 @@ class MyRobot(BCAbstractRobot):
             
             
             if self.me['turn'] == 1:
-                for bot in self.get_visible_robot_map:
-                    if bot['unit'] == SPECS['CASTLE']:
-                        self.castleLoc.append(bot)
-                        numCastles += 1
-            self.log("TURN: " + str(self.me['turn']))
+                # for bot in self.get_visible_robot_map:
+                #     if bot['unit'] == SPECS['CASTLE']:
+                #         self.castleLoc.append(bot)
+                #         numCastles += 1
+                self.log("TURN: " + str(self.me['turn']))
             # self.log("the map is "+ nav.symmetric(self.map))
             my_coord = (self.me['x'], self.me['y'])
             # self.log(str(SPECS['UNITS'][SPECS['CRUSADER']]))
