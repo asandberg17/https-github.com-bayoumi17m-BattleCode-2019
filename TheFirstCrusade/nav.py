@@ -228,16 +228,16 @@ def symmetric(full_map):
     coord10_h=coord10[0],l-1-coord10[1]
 
 
-    while full_map[coord1[1]][coord1[0]]:
+    while not full_map[coord1[1]][coord1[0]]:
         coord1=randint(0,l),randint(0,l)
     coord1_h=coord1[0],l-1-coord1[1]
-    while full_map[coord2[1]][coord2[0]]:
+    while not full_map[coord2[1]][coord2[0]]:
         coord2=randint(0,l),randint(0,l)
     coord2_h=coord2[0],l-1-coord2[1]
-    while full_map[coord3[1]][coord3[0]]:
+    while not full_map[coord3[1]][coord3[0]]:
         coord3=randint(0,l),randint(0,l)
     coord3_h=coord3[0],l-1-coord3[1]
-    while full_map[coord4[1]][coord4[0]]:
+    while not full_map[coord4[1]][coord4[0]]:
         coord4=randint(0,l),randint(0,l)
     coord4_h=coord4[0],l-1-coord4[1]
 
@@ -375,100 +375,99 @@ def astar(pprint,vis,full_map,start,goal,moves):
 
 
 
-def defense(full_map, loc):
+def defense(full_map, bot_map, loc):
     spoke=randint(1,4)
     target=loc[0],loc[1]
 
     if spoke==1:
         target=target[0],target[1]+3
-        while not full_map[target[0]][target[1]]:
+        while not full_map[target[1]][target[0]]:
             target=target[0],target[1]+1
     if spoke==2:
         target=target[0]+3,target[1]
-        while not full_map[target[0]][target[1]]:
+        while not full_map[target[1]][target[0]]:
             target=target[0]+1,target[1]
     if spoke==3:
         target=target[0],target[1]-3
-        while not full_map[target[0]][target[1]]:
+        while not full_map[target[1]][target[0]]:
             target=target[0],target[1]-1
     if spoke==4:
         target=target[0]-3,target[1]
-        while not full_map[target[0]][target[1]]:
+        while not full_map[target[1]][target[0]]:
             target=target[0]-1,target[1]
     return target
 
+def defense_2(full_map, castle_loc, visible):
+    pass
 
 
 
 
-def get_closest_resources(loc,map,robot_map,fuel_map,karbonite_map):
+def get_closest_resources(loc,map,fuel_map,karbonite_map):
     closest_resources=[]
-    k=get_closest_karbonite(loc,karbonite_map)
-    karb=True
-    k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
+    closest_resources_large=[]
 
-    #need to get a list of any castles or churches nearby
-    #the radius for any castle if half of the length of the map, if any church is outside that radius it should send pilgrims to 
-    #any resource outside of a radius of say five and that pilgrim will build another church, so churches should only build pilgrims if theyre
-    #out of the radius of castles
-
-
-    #also need to get a way to 
-    while k_dist<10:
-        closest_resources.append(k)
-        if karb==True:
-            k=get_closest_karbonite(loc,fuel_map)
-            k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
-            karb=False
-        else:
-            k=get_closest_karbonite(loc,karbonite_map)
-            k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
-            karb=True
-    #checking to make sure that the other type or resource doesnt have a deposit still in range
-    if karb==True:
-        k=get_closest_karbonite(loc,fuel_map)
-        k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
-        karb=False
-    else:
-        k=get_closest_karbonite(loc,karbonite_map)
-        k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
-        karb=True
-    if k_dist<10:
-        closest_resources.append(k)
-    #now adding a final two locations, these will be the last two pilgrims the castle will send out and far enough away to build churches
-    i=0
-    while i<2:
-        if karb==True:
-            k=get_closest_karbonite(loc,fuel_map)
-            k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
-            karb=False
-        else:
-            k=get_closest_karbonite(loc,karbonite_map)
-            k_dist=(k[0]-loc[0])**2 +(k[1]-loc[1])**2
-            karb=True
-        closest_resources.append(k)
-        i=i+1
-
-    #need to make sure churches dont send pilgrims to resources within ten of a castle or other church
-    #use self.get_robot(id) to figure out the type or robot
+    #ill get the closest resources in a radius of 25, then ill go through that list and make all the resources in a radius of two,
+    #then each castle or church should send pilgrims to any in their radius two circle then send three more out to the next two elements
+    #on the radius 25 list
+    x_start=loc[0]-25
+    y_start=loc[1]-25
+    if x_start<0:
+        x_start=0
+    if y_start<0:
+        y_start=0
+    x_end=loc[0]+25
+    y_end=loc[1]+25
+    if x_end>len(map):
+        x_end=len(map)
+    if y_end>len(map):
+        y_end=len(map)
+    for x in range(x_start,x_end):
+        for y in range(y_start,y_end):
+            if fuel_map[y][x] or karbonite_map[y][x]:
+                closest_resources_large.append([x,y])
+    
+    x_start=loc[0]-2
+    x_end=loc[0]+3
+    y_start=loc[1]-2
+    y_end=loc[1]+3
+    if x_start<0:
+        x_start=0
+    if y_start<0:
+        y_start=0
+    if x_end>len(map):
+        x_end=len(map)
+    if y_end>len(map):
+        y_end=len(map)
+    for x in range(x_start,x_end):
+        for y in range(y_start,y_end):
+            if fuel_map[y][x] or karbonite_map[y][x]:
+                closest_resources.append([x,y])
+    closest_resources.append(closest_resources_large[len(closest_resources_large)-1])
+    closest_resources.append(closest_resources_large[len(closest_resources_large)-2])
 
     return closest_resources
 
 #first send pilgrims to nearest resources alternating between type  when the robots get there and are full they check if there is 
 #a church within radius 5, if they can build a church they then see if there are any other resources within radius 5 if there are
 #find the middle and test if it is viable, if not move slightly
-def church_or_no(self,map,visible):
+def church_or_no(me,map,visible):
     churches = []
     #could make this a little faster by making it a while loop that exists once weve reached the length of visible or returns once we find a church
     for r in visible:
-        if not self.is_visible(r):
+        if not me.is_visible(r):
             # this robot isn't actually in our vision range, it just turned up because we heard its radio broadcast. disregard.
             continue
         # now all in vision range, can see x, y etc
         #check of 
-        if r['team'] == self.me['team'] and r['unit']=='1':
+        if r['team'] == me.me['team'] and r['unit']=='1' or r['unit']=='0':
             churches.append(r)
-    return not churches
+
+    # pprint(str(churches))
+    # total_karbonite=karbonite+my_karbonite
+    # total_fuel=fuel+my_fuel
+
+    return len(churches)==0 
 #returns a boolean on whether or not a church needs to be built
 #when were standing on the location to build a church we need to check once more that it is still necessary and that another robot
 #hasnt built one before
@@ -518,8 +517,6 @@ def get_closest_dropoff(self, visible):
                 best_dist=dist
                 best=r
     return best['x'],best['y']
-
-
 
 def aiming(loc,map,robot_map):
     return None
