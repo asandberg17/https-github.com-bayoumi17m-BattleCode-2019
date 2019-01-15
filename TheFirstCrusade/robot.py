@@ -319,7 +319,7 @@ class MyRobot(BCAbstractRobot):
                 if not self.resources_sphere:
                     karbonite_map=self.get_karbonite_map()
                     fuel_map=self.get_fuel_map()
-                    self.resources_sphere=nav.get_closest_resources(my_coord,self.get_passable_map(),karbonite_map,fuel_map)
+                    self.resources_sphere=nav.get_closest_resources(self.log,my_coord,self.get_passable_map(),karbonite_map,fuel_map)
                     self.log(self.resources_sphere)
                 #sending pilgrim its target
                 targetX, targetY = self.resources_sphere[self.pilgrims_built]
@@ -336,7 +336,7 @@ class MyRobot(BCAbstractRobot):
                 if not self.resources_sphere:
                     karbonite_map=self.get_karbonite_map()
                     fuel_map=self.get_fuel_map()
-                    self.resources_sphere=nav.get_closest_resources(my_coord,self.map,karbonite_map,fuel_map)
+                    self.resources_sphere=nav.get_closest_resources(self.log,my_coord,self.map,karbonite_map,fuel_map)
                     self.log(self.resources_sphere)
                 
                 #sending pilgrim its target
@@ -348,7 +348,6 @@ class MyRobot(BCAbstractRobot):
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 self.pilgrims_built=self.pilgrims_built+1
                 return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
-<<<<<<< HEAD
 
             elif self.me['turn'] < 30:
 
@@ -455,6 +454,12 @@ class MyRobot(BCAbstractRobot):
                 if self.me[energy]<capacity:
                     #if not full and at target and shouldnt build church, mining. Actually if at target and still havent built church 
                     #should not be trying to build church
+                    # if nav.distance(self.target,my_loc)<100:
+                    #     taken=nav.resource_occupied(my_loc,self.target,self.get_visible_robots())
+                    #     if taken:
+                    #         target=new_resource_target()
+
+
                     if my_loc[0]==self.target[0] and my_loc[1]==self.target[1]:
                         self.log('Mining')
                         return self.mine()

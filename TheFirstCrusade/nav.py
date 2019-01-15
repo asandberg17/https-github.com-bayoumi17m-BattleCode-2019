@@ -159,26 +159,6 @@ def in_list(dict,key):
         return False
 
 
-
-        
-
-
-# def goto(loc, target, full_map, robot_map, already_been):
-#     goal_dir = calculate_dir(loc, target)
-#     if goal_dir is (0,0):
-#         return (0,0)
-#     #self.log("MOVING FROM " + str(my_coord) + " TO " + str(nav.dir_to_coord[goal_dir]))
-#     #while (not is_passable(full_map, loc, goal_dir, robot_map)) or (apply_dir(loc, goal_dir) in already_been):
-#     target=apply_dir(loc, goal_dir)
-#     # while (not is_passable(full_map, loc, goal_dir, robot_map)) or (apply_dir(loc, goal_dir) in already_been):
-#     #     goal_dir = rotate(goal_dir, 1)
-#     #     target=apply_dir(loc, goal_dir)
-#     return goal_dir
-    
-   
-
-
-
 def get_closest_karbonite(loc, karb_map):
     closest_karb = (-100, -100)
     karb_dist_sq = 100000
@@ -482,7 +462,7 @@ def defense_2(pprint, full_map, castle_loc, visible, defense_fields):
     return defense_pos
 
 
-def get_closest_resources(loc,map,fuel_map,karbonite_map):
+def get_closest_resources(pprint,loc,map,fuel_map,karbonite_map):
     closest_resources=[]
     closest_resources_large=[]
 
@@ -490,7 +470,7 @@ def get_closest_resources(loc,map,fuel_map,karbonite_map):
     #then each castle or church should send pilgrims to any in their radius two circle then send three more out to the next two elements
     #on the radius 25 list
     x_start=loc[0]-len(map)/2
-    y_start=loc[1]-len(map)/2)
+    y_start=loc[1]-len(map)/2
     if x_start<0:
         x_start=0
     if y_start<0:
@@ -525,8 +505,47 @@ def get_closest_resources(loc,map,fuel_map,karbonite_map):
 
 
     #now have order both lists by distance
-
+    quickSort(closest_resources,closest_resources[0],closest_resources[len(closest_resources)+1],loc)
+    quickSort(closest_resources_large,closest_resources_large[0],closest_resources_large[len(closest_resources_large)+1],loc)
+    if len(closest_resources)<len(closest_resources_large):
+        closest_resources.append(closest_resources_large[len(closest_resources)+1])
+    if len(closest_resources)<len(closest_resources_large):
+        closest_resources.append(closest_resources_large[len(closest_resources)+1])
+    pprint("my closest resources are"+closest_resources)
     return closest_resources
+def quickSort(l,min,max,loc):
+    if min<max:
+        j=partition(l,min,max,loc)
+
+        quickSort(l,min,j-1,loc)
+        quickSort(l,j,max,loc)
+
+def partition(l,min,max,loc):
+    t=min+1
+    j=max
+    temp=None
+    pivot_dist=(l[0][0]-loc[0])**2+(l[0][1]-loc[1])**2
+    t_dist=(l[t][0]-loc[0])**2+(l[t][1]-loc[1])**2
+    j_dist=(l[j][0]-loc[0])**2+(l[j][1]-loc[1])**2
+    while t<j:
+        if t_dist<=pivot_dist:
+            t=t+1
+            t_dist=(l[t][0]-loc[0])**2+(l[t][1]-loc[1])**2
+        elif j_dist>=pivot_dist:
+            j=j-1
+            j_dist=(l[j][0]-loc[0])**2+(l[j][1]-loc[1])**2
+        else:
+            temp=l[t]
+            l[t]=l[j]
+            l[j]=temp
+            t=t+1
+            j=j-1
+            t_dist=(l[t][0]-loc[0])**2+(l[t][1]-loc[1])**2
+    j_dist=(l[j][0]-loc[0])**2+(l[j][1]-loc[1])**2
+    return j
+
+
+
 
 #first send pilgrims to nearest resources alternating between type  when the robots get there and are full they check if there is 
 #a church within radius 5, if they can build a church they then see if there are any other resources within radius 5 if there are
@@ -607,7 +626,7 @@ def get_closest_dropoff(self, visible):
 
 def aiming(loc, map, visible, team, attackmin, attackmax):
     attkmax = int(math.sqrt(attackmax))
-    attkmin = int(math.sqrt(attkmin))
+    attkmin = int(math.sqrt(attackmin))
 
     attack_map = []
     for i in range(-attkmax,attkmax+1):
@@ -641,6 +660,18 @@ def aiming(loc, map, visible, team, attackmin, attackmax):
                 max_pos = (k,i)
 
     return (max_pos[0] - centroid[0], max_pos[1] - centroid[1])
+
+
+def resource_occupied(loc,target,visible):
+    for r in visible:
+        if r['x']==target[0] and r['y']==target[1] and r['unit']==2:
+            return False
+    return True
+
+
+
+def new_resource_target():
+    closest_resources=nav.get_closest_resources(self.log,my_loc,self.map,self.get_fuel_map(),self.get_karbonite_map())
 
 
 
