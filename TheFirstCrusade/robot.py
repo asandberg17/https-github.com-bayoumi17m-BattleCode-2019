@@ -415,7 +415,7 @@ class MyRobot(BCAbstractRobot):
                 if not self.resources_sphere:
                     karbonite_map=self.get_karbonite_map()
                     fuel_map=self.get_fuel_map()
-                    self.resources_sphere=nav.get_closest_resources(self.log,my_coord,self.get_passable_map(),karbonite_map,fuel_map)
+                    self.resources_sphere=nav.get_closest_resources(self.log,my_coord,self.map,karbonite_map,fuel_map)
                     self.log(self.resources_sphere)
                 #sending pilgrim its target
                 targetX, targetY = self.resources_sphere[self.pilgrims_built]
