@@ -454,10 +454,11 @@ class MyRobot(BCAbstractRobot):
                 if self.me[energy]<capacity:
                     #if not full and at target and shouldnt build church, mining. Actually if at target and still havent built church 
                     #should not be trying to build church
-                    # if nav.distance(self.target,my_loc)<100:
-                    #     taken=nav.resource_occupied(my_loc,self.target,self.get_visible_robots())
-                    #     if taken:
-                    #         target=new_resource_target()
+                    if nav.distance(self.target,my_loc)<100:
+                        taken=nav.resource_occupied(self.me,my_loc,self.target,self.get_visible_robots())
+                        if taken:
+                            self.log('my spot is taken:'+taken)
+                            self.target=nav.new_resource_target(self.log,self.me,my_loc,self.map,self.get_fuel_map(),self.get_karbonite_map(),self.get_visible_robots())
 
 
                     if my_loc[0]==self.target[0] and my_loc[1]==self.target[1]:

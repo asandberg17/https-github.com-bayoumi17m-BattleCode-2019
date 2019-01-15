@@ -662,16 +662,25 @@ def aiming(loc, map, visible, team, attackmin, attackmax):
     return (max_pos[0] - centroid[0], max_pos[1] - centroid[1])
 
 
-def resource_occupied(loc,target,visible):
+def resource_occupied(me,loc,target,visible):
     for r in visible:
-        if r['x']==target[0] and r['y']==target[1] and r['unit']==2:
-            return False
-    return True
+        if r['x']==target[0] and r['y']==target[1] and r['unit']==2 and r.id !=me.id:
+            return True
+    return False
 
 
 
-def new_resource_target():
-    closest_resources=nav.get_closest_resources(self.log,my_loc,self.map,self.get_fuel_map(),self.get_karbonite_map())
+def new_resource_target(pprint,me,loc,map,fuel_map,karbonite_map,visible):
+    closest_resources=get_closest_resources(pprint,loc,map,fuel_map,karbonite_map)
+    i=0
+    occupied=resource_occupied(me,loc,closest_resources[0],visible)
+    dist=distance(closest_resources[i],loc)
+    pprint("got this far")
+    while occupied and i<len(closest_resources) and dist<100:
+        i=i+1
+        occupied=resource_occupied(me,loc,closest_resources[i],visible)
+        dist=distance(closest_resources[i],loc)
+    return closest_resources[i]
 
 
 
