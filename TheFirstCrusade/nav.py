@@ -228,16 +228,16 @@ def symmetric(full_map):
     coord10_h=coord10[0],l-1-coord10[1]
 
 
-    while full_map[coord1[1]][coord1[0]]:
+    while not full_map[coord1[1]][coord1[0]]:
         coord1=randint(0,l),randint(0,l)
     coord1_h=coord1[0],l-1-coord1[1]
-    while full_map[coord2[1]][coord2[0]]:
+    while not full_map[coord2[1]][coord2[0]]:
         coord2=randint(0,l),randint(0,l)
     coord2_h=coord2[0],l-1-coord2[1]
-    while full_map[coord3[1]][coord3[0]]:
+    while not full_map[coord3[1]][coord3[0]]:
         coord3=randint(0,l),randint(0,l)
     coord3_h=coord3[0],l-1-coord3[1]
-    while full_map[coord4[1]][coord4[0]]:
+    while not full_map[coord4[1]][coord4[0]]:
         coord4=randint(0,l),randint(0,l)
     coord4_h=coord4[0],l-1-coord4[1]
 
@@ -375,28 +375,30 @@ def astar(pprint,vis,full_map,start,goal,moves):
 
 
 
-def defense(full_map, loc):
+def defense(full_map, bot_map, loc):
     spoke=randint(1,4)
     target=loc[0],loc[1]
 
     if spoke==1:
         target=target[0],target[1]+3
-        while not full_map[target[0]][target[1]]:
+        while not full_map[target[1]][target[0]]:
             target=target[0],target[1]+1
     if spoke==2:
         target=target[0]+3,target[1]
-        while not full_map[target[0]][target[1]]:
+        while not full_map[target[1]][target[0]]:
             target=target[0]+1,target[1]
     if spoke==3:
         target=target[0],target[1]-3
-        while not full_map[target[0]][target[1]]:
+        while not full_map[target[1]][target[0]]:
             target=target[0],target[1]-1
     if spoke==4:
         target=target[0]-3,target[1]
-        while not full_map[target[0]][target[1]]:
+        while not full_map[target[1]][target[0]]:
             target=target[0]-1,target[1]
     return target
 
+def defense_2(full_map, castle_loc, visible):
+    pass
 
 
 
@@ -453,7 +455,7 @@ def get_closest_resources(loc,map,robot_map,fuel_map,karbonite_map):
 #first send pilgrims to nearest resources alternating between type  when the robots get there and are full they check if there is 
 #a church within radius 5, if they can build a church they then see if there are any other resources within radius 5 if there are
 #find the middle and test if it is viable, if not move slightly
-def church_or_no(self,loc,map,visible,robot_map,fuel_map,karbonite_map,total_karb,total_fuel,self_tank):
+def church_or_no(self,map,visible):
     up=True
     churches = []
     #could make this a little faster by making it a while loop that exists once weve reached the length of visible or returns once we find a church
@@ -472,12 +474,53 @@ def church_or_no(self,loc,map,visible,robot_map,fuel_map,karbonite_map,total_kar
 #hasnt built one before
 
 #return the coordinates of a good buidling site
-def church_build_site(loc,map,fuel_map,Karbonite_map,robot_map):
-    dir=build_site[0]-loc[0],build_site[1]-loc[1]
-    if is_passable(fmap, loc, dir, robot_map=None)==False:
-    #the position wasn't good try another
+#use self.get_visible_robot_map() for this
+def church_build_site(loc,map,fuel_map,karbonite_map):
+    #like attackable want to get all the tiles that are in vision that have resources
+    #loop through grid around loc
+    # center = loc[0]-2,loc[1]-2
+    resources=[]
+    x_start=loc[0]-2
+    y_start=loc[1]-2
+    for x in range(x_start,loc[0]+3):
+        for y in range (y_start,loc[1]+3):
+            if x<len(map) and y<len(map) and x>-1 and y>-1 and fuel_map[y][x]==True or karbonite_map[y][x]==True:
+                resources.append([x,y])
+    #now we have all the tiles nearby that have resources, have to find a sort of center
+    x_cent=0
+    y_cent=0
+    for i in range(len(resources)):
+        x_cent=x_cent+resources[i][0]
+        y_cent=y_cent+resources[i][1]
+    x_cent=int(x-cent/len(resources))
+    y_cent=int(y_cent/len(resources))
+    site=(x_cent,y_cent)
+    #we now have the geographical middle but it may not be a whole number and it may not be a buildable location
+    dir=[(1,1),(-1,-1),(0,1),(1,0),(0,-1),(-1,0),(0,2),(2,0),(0,-2),(2,0)]
+    i=0
+    while map[site[1]][site[0]] !=True or fuel_map[site[1]][site[0]] or karbonite_map[site[1]][site[0]] and i<len(dir):
+        site=apply_dir(site,dir[i])
+        i=i+1
+    return site
 
-def aiming(loc,map,robot_map)
+def get_closest_dropoff(self, visible):
+    best=None
+    best_dist=1000
+    for r in visible:
+        if not self.is_visible(r):
+            # this robot isn't actually in our vision range, it just turned up because we heard its radio broadcast. disregard.
+            continue
+        # now all in vision range, can see x, y etc
+        dist = (r['x'] - self.me['x'])**2 + (r['y'] - self.me['y'])**2
+        #check of 
+        if r['team'] == self.me['team'] and (r['unit']=='1' or r['unit']==0):
+            if dist<best_dist:
+                best_dist=dist
+                best=r
+    return best['x'],best['y']
+
+def aiming(loc,map,robot_map):
+    return None
 
     
 
