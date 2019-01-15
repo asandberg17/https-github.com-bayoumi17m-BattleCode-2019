@@ -527,7 +527,11 @@ class MyRobot(BCAbstractRobot):
                 # self.log("karbMiner: " + str(karbMiner))
                 drop_off = False
                 for botv in self.get_visible_robots():
+                    if not self.is_visible(botv):
+                        continue
                     if botv['unit'] == SPECS['CASTLE'] or botv['unit'] == SPECS['CHURCH']:
+                        if botv['team'] != self.me['team']:
+                            continue
                         for giving in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
                             if util.nodeHash(giving[0]+self.me['x'], giving[1]+self.me['y']) == util.nodeHash(botv['x'],botv['y']):
                                 drop_off = True
