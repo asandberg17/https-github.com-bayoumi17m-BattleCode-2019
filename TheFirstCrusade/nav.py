@@ -497,7 +497,9 @@ def church_build_site(loc,map,fuel_map,karbonite_map):
     #we now have the geographical middle but it may not be a whole number and it may not be a buildable location
     dir=[(1,1),(-1,-1),(0,1),(1,0),(0,-1),(-1,0),(0,2),(2,0),(0,-2),(2,0)]
     i=0
-    while map[site[1]][site[0]] !=True or fuel_map[site[1]][site[0]] or karbonite_map[site[1]][site[0]] and i<len(dir):
+    while map[site[1]][site[0]] !=True or fuel_map[site[1]][site[0]] or karbonite_map[site[1]][site[0]]:
+        if i >= len(dir):
+            break
         site=apply_dir(site,dir[i])
         i=i+1
     return site
