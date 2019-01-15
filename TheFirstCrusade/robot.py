@@ -220,7 +220,11 @@ class MyRobot(BCAbstractRobot):
             # return self.move(*goal_dir)
                
         elif self.me['unit'] == SPECS['CASTLE']:
+<<<<<<< HEAD
             self.log("I AM A CASTLE HEAR ME ROAR")
+=======
+            self.log(str(self.get_visible_robots()))
+>>>>>>> 2e74c415dab6d85a5c34cefe0d6df4c04ac6c031
             #initializing my coordinates
             my_coord = (self.me['x'], self.me['y'])
             if self.coolDown > 0:
