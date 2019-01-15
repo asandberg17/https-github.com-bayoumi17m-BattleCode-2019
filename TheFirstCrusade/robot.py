@@ -39,7 +39,7 @@ class MyRobot(BCAbstractRobot):
     destination = None
 
     def turn(self):
-        self.log(str(self.me))
+        # self.log(str(self.me))
         if self.me['unit'] == SPECS['PROPHET']:
             self.log("Prophet health: " + str(self.me['health']))
             attack_order = {SPECS['PREACHER']: 1, SPECS['CRUSADER']: 3, SPECS['PROPHET']: 2}
@@ -219,6 +219,7 @@ class MyRobot(BCAbstractRobot):
             # return self.move(*goal_dir)
                
         elif self.me['unit'] == SPECS['CASTLE']:
+            self.log(str(self.get_visible_robots()))
             #initializing my coordinates
             my_coord = (self.me['x'], self.me['y'])
             if self.coolDown > 0:
