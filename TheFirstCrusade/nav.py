@@ -220,6 +220,15 @@ def symmetric(full_map):
     while not full_map[coord4[1]][coord4[0]]:
         coord4=randint(0,l),randint(0,l)
     coord4_h=coord4[0],l-1-coord4[1]
+    while not full_map[coord5[1]][coord5[0]]:
+        coord5=randint(0,l),randint(0,l)
+    coord5_h=coord5[0],l-1-coord5[1]
+    while not full_map[coord6[1]][coord6[0]]:
+        coord6=randint(0,l),randint(0,l)
+    coord6_h=coord4[0],l-1-coord6[1]
+    while not full_map[coord7[1]][coord7[0]]:
+        coord7=randint(0,l),randint(0,l)
+    coord7_h=coord7[0],l-1-coord7[1]
 
 
 
@@ -624,7 +633,7 @@ def get_closest_dropoff(self, visible):
                 best=r
     return best['x'],best['y']
 
-def aiming(loc, map, visible, team, attackmin, attackmax):
+def aiming(loc, visible, team, attackmin, attackmax):
     attkmax = int(math.sqrt(attackmax))
     attkmin = int(math.sqrt(attackmin))
 

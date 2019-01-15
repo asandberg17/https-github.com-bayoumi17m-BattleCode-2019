@@ -21,6 +21,7 @@ class MyRobot(BCAbstractRobot):
     castleLoc = {}
     coolDown = 0
     resources_sphere=[]
+    castleBeaten = False
 
     defense = True
     # Make parent the id of the Castle or centroid bot
@@ -76,6 +77,8 @@ class MyRobot(BCAbstractRobot):
             if attackable:
                 # attack first robot
                 r = attackable[0]
+                if r['unit'] == SPECS['CASTLE']:
+                    self.castleBeaten = True
                 for a in attackable:
                     if attack_order[a['unit']] < attack_order[r['unit']]:
                         r = a
@@ -155,6 +158,8 @@ class MyRobot(BCAbstractRobot):
             if attackable:
                 # attack first robot
                 r = attackable[0]
+                if r['unit'] == SPECS['CASTLE']:
+                    self.castleBeaten = True
                 self.log('attacking! ' + str(r) + ' at loc ' + (r['x'] - self.me['x'], r['y'] - self.me['y']))
                 return self.attack(r['x'] - self.me['x'], r['y'] - self.me['y'])
 
@@ -178,7 +183,8 @@ class MyRobot(BCAbstractRobot):
                 self.destination = self.homePath
                 path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
-                self.castle_talk(111)
+                if self.castleBeaten: 
+                    self.castle_talk(111)
                 return self.move(*action)
                 # return
 
@@ -241,6 +247,77 @@ class MyRobot(BCAbstractRobot):
             # self.log(goal_dir)
             # return self.move(*goal_dir)
                
+        elif self.me['unit'] == SPECS['PREACHER']:
+            self.log("Preahcer health: " + str(self.me['health'])) 
+
+            if self.me['turn'] == 1:
+                self.homePath = (self.me['x'],self.me['y'])
+
+            visible = self.get_visible_robots()
+            # moves = [(-4, 0), (-3, -2), (-3, -1), (-3, 0), (-3, 1), (-3, 2), (-2, -3), (-2, -2), (-2, -1), (-2, 0), (-2, 1), (-2, 2), (-2, 3), (-1, -3), (-1, -2), (-1, -1), (-1, 0), (-1, 1), (-1, 2), (-1, 3), (0, -4), (0, -3), (0, -2), (0, -1), (0, 0), (0, 1), (0, 2), (0, 3), (0, 4), (1, -3), (1, -2), (1, -1), (1, 0), (1, 1), (1, 2), (1, 3), (2, -3), (2, -2), (2, -1), (2, 0), (2, 1), (2, 2), (2, 3), (3, -2), (3, -1), (3, 0), (3, 1), (3, 2), (4, 0)]
+            moves = []
+            for i in range(-4,5):
+                for k in range(-4,5):
+                    if i**2 + k**2 <= SPECS['UNITS'][SPECS['PREACHER']]['SPEED']:
+                        moves.append((i,k))
+
+            if self.me['turn'] == 1:
+                self.homePath = (self.me['x'], self.me['y'])
+
+            # get attackable robots
+            attackable = []
+            signal = -1
+            for r in visible:
+                if self.is_radioing(r) and self.is_visible(r) and r['unit'] == SPECS['CASTLE']:
+                    self.log("Recieving Signal: " + str(r.signal))
+                    signal = r.signal
+                # x = 5
+                if not self.is_visible(r):
+                    # this robot isn't actually in our vision range, it just turned up because we heard its radio broadcast. disregard.
+                    continue
+                # now all in vision range, can see x, y etc
+                dist = (r['x'] - self.me['x'])**2 + (r['y'] - self.me['y'])**2
+                if r['team'] != self.me['team'] and SPECS['UNITS'][SPECS["PREACHER"]]['ATTACK_RADIUS'][0] <= dist <= SPECS['UNITS'][SPECS["PREACHER"]]['ATTACK_RADIUS'][1]:
+                    attackable.append(r)
+
+            if attackable:
+                # attack first robot
+                r = nav.aiming((self.me['x'],self.me['y']), attackable, self.me['team'], SPECS['UNITS'][SPECS["PREACHER"]]['ATTACK_RADIUS'][0], SPECS['UNITS'][SPECS["PREACHER"]]['ATTACK_RADIUS'][1])
+                self.log('attacking! ' + str(r) + ' at loc ' + (r['x'] - self.me['x'], r['y'] - self.me['y']))
+                return self.attack(r[0] - self.me['x'], r[1] - self.me['y'])
+
+            my_coord = (self.me['x'], self.me['y'])    
+            
+            if not self.destination:
+                self.log("trying to move")
+                if signal != -1:
+                    destination = util.unHash(signal)
+                else:
+                    destination = my_coord
+                self.destination = nav.reflect(self.map, destination, nav.symmetric(self.get_fuel_map()))
+
+            # self.log("Signal: " + str(signal))
+            if signal >= 0:
+                self.destination = nav.reflect(self.map, util.unHash(signal), nav.symmetric(self.get_fuel_map()))
+
+            self.log("My destination is " + self.destination)
+            if (self.destination[0]-my_coord[0])**2 + (self.destination[1]-my_coord[1])**2 < 10:
+                self.log("Holding my ground")
+                self.destination = self.homePath
+                path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                self.log("Length of path: " + len(path))
+                action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+                return self.move(*action)
+                # return
+
+
+            path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+
+            action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+            # self.log("Cost: " + str((action[0]**2 + action[1]**2)*SPECS['UNITS'][SPECS['CRUSADER']]['FUEL_PER_MOVE']))
+            # self.log("Fuel: " + str(self.fuel))
+            return self.move(*action)
+
         elif self.me['unit'] == SPECS['CASTLE']:
             self.log("I AM A CASTLE HEAR ME ROAR")
             #initializing my coordinates
@@ -260,10 +337,25 @@ class MyRobot(BCAbstractRobot):
                     if bot.castle_talk == 111 and self.coolDown == 0:
                         self.log("terminated")
                         terminated = True
-                        self.coolDown = 20
+                        self.coolDown = 30
                         break
                 if terminated:
                     self.castles.pop(0)
+
+            if self.me['turn'] == 3:
+                for bot in self.get_visible_robots():
+                    if bot.castle_talk > 0:
+                        temp = self.castleLoc[bot['id']]
+                        self.castleLoc[bot['id']] = (bot.castle_talk - 1, self.castleLoc[bot['id']][1])
+
+                for k in self.castleLoc.keys():
+                    self.castles.append(k)
+                    self.numCastles += 1
+
+
+            # self.log("WICKED IMPORTANT: " + self.castles)
+            # self.log("DOUBLE IMPORTANT: " + str(self.castleLoc))
+
 
 
             self.log("TURN: " + str(self.me['turn']))
@@ -330,7 +422,7 @@ class MyRobot(BCAbstractRobot):
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 self.pilgrims_built=self.pilgrims_built+1
                 return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
-            elif self.me['turn']<10:
+            elif self.me['turn']<20 or self.me['turn'] % 30 == 0:
 
                 self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
                 if not self.resources_sphere:
@@ -339,53 +431,50 @@ class MyRobot(BCAbstractRobot):
                     self.resources_sphere=nav.get_closest_resources(self.log,my_coord,self.map,karbonite_map,fuel_map)
                     self.log(self.resources_sphere)
                 
+                self.log("Sphere of influence: " + str(self.resources_sphere))
+
                 #sending pilgrim its target
                 targetX, targetY = self.resources_sphere[self.pilgrims_built]
                 targetX = str(targetX); targetY = str(targetY)
                 self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
+                self.log("Signal sent is: " + str(len(targetX)) + targetX + targetY)
 
                 self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 self.pilgrims_built=self.pilgrims_built+1
                 return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
 
-            elif self.me['turn'] < 30:
+            elif self.me['turn'] < 40:
 
-                if self.me['turn'] == 3:
-                    for bot in self.get_visible_robots():
-                        if bot.castle_talk > 0:
-                            temp = self.castleLoc[bot['id']]
-                            self.castleLoc[bot['id']] = (bot.castle_talk - 1, self.castleLoc[bot['id']][1])
-
-                    for k in self.castleLoc.keys():
-                        self.castles.append(k)
-                        self.numCastles += 1
 
                     # self.log(str(self.castleLoc))
                     # self.log(str(self.castles))
 
                     # self.log(str(self.castleLoc))
 
-                #goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                self.log(self.me['turn'])
+
+                if self.fuel > self.numCastles*SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite > self.numCastles*SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE']:
+                    self.log("Building a Prophet at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
+                    return self.build_unit(SPECS['PROPHET'], goal_dir[0],goal_dir[1])
+
+            elif self.me['turn'] % 3 == 0:
+                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 # self.log(self.me['turn'])
+                if self.fuel > self.numCastles*SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite > self.numCastles*SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE']:
+                    self.log("Building a Prophet at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
+                    return self.build_unit(SPECS['PROPHET'], goal_dir[0],goal_dir[1])
 
-                # if self.fuel > self.numCastles*SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite > self.numCastles*SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE']:
-                #     self.log("Building a Prophet at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
-                #     return self.build_unit(SPECS['PROPHET'], goal_dir[0],goal_dir[1])
-
-            # elif self.me['turn'] % 3 == 0:
-            #     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-            #     # self.log(self.me['turn'])
-            #     if self.fuel > self.numCastles*SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite > self.numCastles*SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE']:
-            #         self.log("Building a Prophet at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
-            #         return self.build_unit(SPECS['PROPHET'], goal_dir[0],goal_dir[1])
-
-            # elif self.me['turn'] % 2 == 0:
-            #     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-            #     # self.log(self.me['turn'])
-            #     if self.fuel > self.numCastles*SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_FUEL'] and self.karbonite > self.numCastles*SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_KARBONITE']:
-            #         self.log("Building a Crusader at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
-            #         return self.build_unit(SPECS['CRUSADER'], goal_dir[0],goal_dir[1])
+            elif self.me['turn'] % 2 == 0:
+                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                # self.log(self.me['turn'])
+                if random.random() < 0.8 and self.fuel > self.numCastles*SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_FUEL'] and self.karbonite > self.numCastles*SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_KARBONITE']:
+                    self.log("Building a Crusader at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
+                    return self.build_unit(SPECS['CRUSADER'], goal_dir[0],goal_dir[1])
+                elif self.fuel > self.numCastles*SPECS['UNITS'][SPECS['PREACHER']]['CONSTRUCTION_FUEL'] and self.karbonite > self.numCastles*SPECS['UNITS'][SPECS['PREACHER']]['CONSTRUCTION_KARBONITE']:
+                    self.log("Building a Preacher at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
+                    return self.build_unit(SPECS['PREACHER'], goal_dir[0],goal_dir[1])
 
             else:
                 pass
