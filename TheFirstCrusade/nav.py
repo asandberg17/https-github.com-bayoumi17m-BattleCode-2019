@@ -187,25 +187,25 @@ def symmetric(full_map):
     l=len(full_map)-1
 
     coord1=randint(0,l),randint(0,l)
-    coord1_h=coord1[0],l-1-coord1[1]
+    coord1_h=coord1[0],l-coord1[1]
     coord2=randint(0,l),randint(0,l)
-    coord2_h=coord2[0],l-1-coord2[1]
+    coord2_h=coord2[0],l-coord2[1]
     coord3=randint(0,l),randint(0,l)
-    coord3_h=coord3[0],l-1-coord3[1]
+    coord3_h=coord3[0],l-coord3[1]
     coord4=randint(0,l),randint(0,l)
-    coord4_h=coord4[0],l-1-coord4[1]
+    coord4_h=coord4[0],l-coord4[1]
     coord5=randint(0,l),randint(0,l)
-    coord5_h=coord5[0],l-1-coord5[1]
+    coord5_h=coord5[0],l-coord5[1]
     coord6=randint(0,l),randint(0,l)
-    coord6_h=coord6[0],l-1-coord6[1]
+    coord6_h=coord6[0],l-coord6[1]
     coord7=randint(0,l),randint(0,l)
-    coord7_h=coord7[0],l-1-coord7[1]
+    coord7_h=coord7[0],l-coord7[1]
     coord8=randint(0,l),randint(0,l)
-    coord8_h=coord8[0],l-1-coord8[1]
+    coord8_h=coord8[0],l-coord8[1]
     coord9=randint(0,l),randint(0,l)
-    coord9_h=coord9[0],l-1-coord9[1]
+    coord9_h=coord9[0],l-coord9[1]
     coord10=randint(0,l),randint(0,l)
-    coord10_h=coord10[0],l-1-coord10[1]
+    coord10_h=coord10[0],l-coord10[1]
 
 
     while not full_map[coord1[1]][coord1[0]]:
