@@ -550,7 +550,7 @@ def partition(l,min,max,loc):
 #first send pilgrims to nearest resources alternating between type  when the robots get there and are full they check if there is 
 #a church within radius 5, if they can build a church they then see if there are any other resources within radius 5 if there are
 #find the middle and test if it is viable, if not move slightly
-def church_or_no(me,loc,map,visible):
+def church_or_no(me,loc,map,visible,karb,fuel):
     churches = []
     #could make this a little faster by making it a while loop that exists once weve reached the length of visible or returns once we find a church
     for r in visible:
@@ -570,7 +570,7 @@ def church_or_no(me,loc,map,visible):
     # total_karbonite=karbonite+my_karbonite
     # total_fuel=fuel+my_fuel
 
-    return len(churches)==0 
+    return len(churches)==0 and karb>=50 and fuel>=200
 #returns a boolean on whether or not a church needs to be built
 #when were standing on the location to build a church we need to check once more that it is still necessary and that another robot
 #hasnt built one before
