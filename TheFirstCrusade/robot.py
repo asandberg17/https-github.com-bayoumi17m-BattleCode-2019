@@ -171,11 +171,11 @@ class MyRobot(BCAbstractRobot):
                     destination = util.unHash(signal)
                 else:
                     destination = my_coord
-                self.destination = nav.reflect(self.map, destination, nav.symmetric(self.get_passable_map()))
+                self.destination = nav.reflect(self.map, destination, nav.symmetric(self.get_karbonite_map()))
 
             # self.log("Signal: " + str(signal))
             if signal >= 0:
-                self.destination = nav.reflect(self.map, util.unHash(signal), nav.symmetric(self.get_passable_map()))
+                self.destination = nav.reflect(self.map, util.unHash(signal), nav.symmetric(self.get_karbonite_map()))
 
             self.log("My destination is " + self.destination)
             if (self.destination[0]-my_coord[0])**2 + (self.destination[1]-my_coord[1])**2 < 10:
