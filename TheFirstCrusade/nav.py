@@ -486,7 +486,7 @@ def get_closest_resources(pprint,loc,full_map,fuel_map,karbonite_map):
     for x in range(x_start,x_end):
         for y in range(y_start,y_end):
             if fuel_map[y][x] or karbonite_map[y][x]:
-                pprint("Adding Resource: " + str([x,y]))
+                # pprint("Adding Resource: " + str([x,y]))
                 closest_resources_large.append((x,y))
     
     x_start=loc[0]-2
@@ -516,9 +516,9 @@ def get_closest_resources(pprint,loc,full_map,fuel_map,karbonite_map):
         closest_resources.append(closest_resources_large[len(closest_resources)])
     if len(closest_resources)<len(closest_resources_large):
         closest_resources.append(closest_resources_large[len(closest_resources)])
-    pprint("my closest resources are "+ str(closest_resources) + " with a location of: " + str(loc))
-    pprint(str(closest_resources_large))
-    return closest_resources
+    # pprint("my closest resources are "+ str(closest_resources) + " with a location of: " + str(loc))
+    # pprint(str(closest_resources_large))
+    return closest_resources_large
 
 def quickSort(l,min,max,loc):
     if min<max:
@@ -570,7 +570,7 @@ def church_or_no(me,loc,map,visible,karb,fuel):
         dist=distance(bot_loc,loc)
         # pprint('i am this far away'+dist +'from a bot that is at'+bot_loc)
         # pprint('and i am at '+loc)
-        if r['team'] == me.me['team'] and (r['unit']=='1' or r['unit']=='0') and dist<6:
+        if r['team'] == me.me['team'] and (r['unit']=='1' or r['unit']=='0') and dist<10:
             churches.append(r)
 
     # pprint(str(churches))
@@ -654,10 +654,6 @@ def get_closest_dropoff(self, visible,homePath):
             if dist<best_dist:
                 best_dist=dist
                 best=r
-<<<<<<< HEAD
-=======
-
->>>>>>> c6090d0b784b1077c776081c526e99e2a8db6217
     if best!=None:          
         return best['x'],best['y']
     return homePath
@@ -714,11 +710,11 @@ def resource_occupied(self,SPECS,me,loc,target,visible):
 
 def new_resource_target(self,SPECS,pprint,me,loc,full_map,fuel_map,karbonite_map,visible):
     closest_resources=get_closest_resources(pprint,loc,full_map,fuel_map,karbonite_map)
-    pprint("new resources: " + str(closest_resources))
+    # pprint("new resources: " + str(closest_resources))
     i=0
     occupied=resource_occupied(self,SPECS,me,loc,closest_resources[0],visible)
     dist=distance(closest_resources[i],loc)
-    pprint("got this far")
+    # pprint("got this far")
     # pprint("Occupied: " + occupied)
     # if occupied:
     #     i = i + 1
@@ -729,10 +725,10 @@ def new_resource_target(self,SPECS,pprint,me,loc,full_map,fuel_map,karbonite_map
         if i >= len(closest_resources) - 1:
             break
         i += 1
-        pprint("closest_resources_new: " + str(closest_resources[i]))
+        # pprint("closest_resources_new: " + str(closest_resources[i]))
         occupied=resource_occupied(self,SPECS,me,loc,closest_resources[i],visible)
         dist=distance(closest_resources[i],loc)
-    pprint("Return Value: " + closest_resources[i])
+    # pprint("Return Value: " + closest_resources[i])
     return closest_resources[i]
     # return closest_resources[0]
 
@@ -745,6 +741,61 @@ def homies(self,SPECS,loc,visible,team):
         if r['team']==team and r['unit']==SPECS['CRUSADER']:
             buddies=buddies+1
     return buddies>4
+
+
+
+def get_closest_resources_church(pprint,loc,robot_map,full_map,fuel_map,karbonite_map):
+    closest_resources=[]
+    closest_resources_large=[]
+
+    #ill get the closest resources in a radius of 25, then ill go through that list and make all the resources in a radius of two,
+    #then each castle or church should send pilgrims to any in their radius two circle then send three more out to the next two elements
+    #on the radius 25 list
+    x_start=loc[0]-(len(full_map)//2)
+    y_start=loc[1]-(len(full_map)//2)
+    if x_start<0:
+        x_start=0
+    if y_start<0:
+        y_start=0
+    x_end=loc[0]+(len(full_map)//2)
+    y_end=loc[1]+(len(full_map)//2)
+    if x_end>len(full_map):
+        x_end=len(full_map)
+    if y_end>len(full_map):
+        y_end=len(full_map)
+    for x in range(x_start,x_end):
+        for y in range(y_start,y_end):
+            if (fuel_map[y][x] or karbonite_map[y][x]) and robot_map[y][x]<=0:
+                closest_resources_large.append((x,y))
+    
+    x_start=loc[0]-2
+    x_end=loc[0]+3
+    y_start=loc[1]-2
+    y_end=loc[1]+3
+    if x_start<0:
+        x_start=0
+    if y_start<0:
+        y_start=0
+    if x_end>len(full_map):
+        x_end=len(full_map)
+    if y_end>len(full_map):
+        y_end=len(full_map)
+    for x in range(x_start,x_end):
+        for y in range(y_start,y_end):
+            if fuel_map[y][x] or karbonite_map[y][x]:
+                closest_resources.append((x,y))
+
+
+    #now have order both lists by distance
+    util.insertionSortLoc(pprint, closest_resources, loc)
+    util.insertionSortLoc(pprint, closest_resources_large, loc)
+    # quickSort(closest_resources,closest_resources[0],closest_resources[len(closest_resources)+1],loc)
+    # quickSort(closest_resources_large,closest_resources_large[0],closest_resources_large[len(closest_resources_large)+1],loc)
+    if len(closest_resources)<len(closest_resources_large):
+        closest_resources.append(closest_resources_large[len(closest_resources)])
+    if len(closest_resources)<len(closest_resources_large):
+        closest_resources.append(closest_resources_large[len(closest_resources)])
+    return closest_resources
 
 
 
