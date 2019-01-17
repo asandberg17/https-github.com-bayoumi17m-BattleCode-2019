@@ -651,14 +651,9 @@ def get_closest_dropoff(self, visible,homePath):
             if dist<best_dist:
                 best_dist=dist
                 best=r
-<<<<<<< HEAD
     if best!=None:          
         return best['x'],best['y']
     return homePath
-=======
-
-    return best['x'],best['y']
->>>>>>> 7ee2f1550de1de741dcad2cc400ce5adfb000598
 
 def aiming(loc, visible, team, attackmin, attackmax):
     attkmax = int(math.sqrt(attackmax))
@@ -736,6 +731,14 @@ def new_resource_target(self,SPECS,pprint,me,loc,full_map,fuel_map,karbonite_map
     # return closest_resources[0]
 
 
+def homies(self,SPECS,loc,visible,team):
+    buddies=0
+    for r in visible:
+        if not self.is_visible(r):
+            continue
+        if r['team']==team and r['unit']==SPECS['CRUSADER']:
+            buddies=buddies+1
+    return buddies>4
 
 
 
