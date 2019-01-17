@@ -260,14 +260,18 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
     settled = []
     visited = []
     frontier = []
+    expanded_nodes = []
     for i in range(size):
         row = []
         vrow = []
+        vrow1 = []
         for k in range(size):
             row.append(0)
             vrow.append(0)
+            vrow1.append(0)
         visited.append(vrow)
         settled.append(row)
+        expanded_nodes.append(vrow1)
 
     start_node = util.Node(None,*start)
     end_node = util.Node(None,*goal)
@@ -280,8 +284,9 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
     visited[start_node.y][start_node.x] = start_node
     j = -1
     current_node = None
-    expanded = 1
-    expanded_nodes = [start]
+    # expanded = 1
+    # expanded_nodes = [start]
+    expanded_nodes[start[1]][start[0]] = 1
 
     while frontier != []:
         j += 1
@@ -330,6 +335,9 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
             if newx > size - 1 or newx < 0 or newy > size - 1 or newy < 0:
                 continue
 
+            if expanded_nodes[newy][newx] == 1:
+                continue
+
             # print(full_map[newy][newx])
             if full_map[newy][newx] == False:
                 continue
@@ -353,8 +361,9 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
                     continue
 
             frontier.append(child)
-            expanded_nodes.append((child.x,child.y))
-            expanded += 1
+            expanded_nodes[child.y][child.x] = 1
+            # expanded_nodes.append((child.x,child.y))
+            # expanded += 1
 
 
 
