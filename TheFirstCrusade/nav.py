@@ -400,13 +400,23 @@ def defense_2(pprint, full_map, castle_loc, visible, defense_fields):
 
     pos = castle_loc
     initial_branch = util.crossBranch()
-    pprint("Before the loop")
+    size = len(full_map)
+    # pprint("Before the loop")
     start = time.time()
     timer = time.time() - start
     while defense_fields['state'] != 'STOP' and timer*1000 < 30:
         # pprint("Time: " + timer)
-        pprint("Pos: " + pos)
+        # pprint("Pos: " + pos)
         if defense_fields['state'] == 'EXPAND':
+            if pos[0] < 0:
+                pos[0] = 0
+            if pos[1] < 0:
+                pos[1] = 0
+            if pos[0] >= size:
+                pos[0] = size-1
+            if pos[1] >= size:
+                pos[1] = size-1
+
             if not full_map[pos[1]][pos[0]]:
                 # Case 1: Position is impassable
                 if castle_loc[1] > len(full_map) // 2 and castle_loc[0] > len(full_map) // 2:
@@ -424,20 +434,20 @@ def defense_2(pprint, full_map, castle_loc, visible, defense_fields):
 
                 
             if vis[int(util.nodeHash(*pos))]:
-                pprint("SOMEONES HOME")
+                # pprint("SOMEONES HOME")
                 # Case 2: Position has already been taken by another bot
-                # if defense_fields['level'] > 2:
-                #     # Sub-case: Already filled branch
-                #     angle = util.crossAngle(util.crossBranch())
-                #     pos = math.cos(angle)*util.crossLength(), math.sin(angle)*util.crossLength()
-                #     if vis[int(util.nodeHash(*pos))]:
-                #         # Sub-sub-case: If new branch has already been expanded and we see that someone is there
-                #         defense_fields = {'parent' : None, 'level': 1, 'state': 'FOLLOW', 'branch': 0, 'branch_type': 'active', 'length': util.crossLength()}
-                #     else:
-                #         # Sub-sub-case: New Diamond has not been started
-                #         defense_fields['level'] = 0
-                #         defense_fields['state'] = 'STOP'
-                #         defense_fields['branch_type'] = 'head'
+                if defense_fields['level'] > 2:
+                    # Sub-case: Already filled branch
+                    angle = util.crossAngle(util.crossBranch())
+                    pos = math.cos(angle)*util.crossLength(), math.sin(angle)*util.crossLength()
+                    if vis[int(util.nodeHash(*pos))]:
+                        # Sub-sub-case: If new branch has already been expanded and we see that someone is there
+                        defense_fields = {'parent' : None, 'level': 1, 'state': 'FOLLOW', 'branch': 0, 'branch_type': 'active', 'length': util.crossLength()}
+                    else:
+                        # Sub-sub-case: New Diamond has not been started
+                        defense_fields['level'] = 0
+                        defense_fields['state'] = 'STOP'
+                        defense_fields['branch_type'] = 'head'
 
                 # sub case: unfilled branch
                 defense_fields['level'] += 1
@@ -468,11 +478,11 @@ def defense_2(pprint, full_map, castle_loc, visible, defense_fields):
                 defense_fields['level'] += 1
             # Still need to do case analysis
 
-        timer = time.time() - start
+        # timer = time.time() - start
 
     defense_pos = pos
     pprint("Final Pos: " + defense_pos)
-    return defense_pos
+    return defense_pos, defense_fields
 
 
 def get_closest_resources(pprint,loc,full_map,fuel_map,karbonite_map):
@@ -692,46 +702,62 @@ def get_closest_dropoff(self, visible,homePath):
             if dist<best_dist:
                 best_dist=dist
                 best=r
-    if best!=None:          
+    if best != None:          
         return best['x'],best['y']
     return homePath
 
-def aiming(loc, visible, team, attackmin, attackmax):
+def aiming(check_vis, pprint, loc, visible, team, attackmin, attackmax):
     attkmax = int(math.sqrt(attackmax))
     attkmin = int(math.sqrt(attackmin))
 
     attack_map = []
     for i in range(-attkmax,attkmax+1):
         row = []
-        for k in range(-attkmax,attkmax+1):
+        for k in range(-attkmax, attkmax+1):
             row.append(0)
         attack_map.append(row)
 
     size = len(attack_map)
+    centroid = (size // 2, size // 2)
+    attack_map[centroid[1]][centroid[0]] = -10
 
-    attack_map[len(attack_map) // 2][len(attack_map) // 2] = -10
-    centroid = (len(attack_map) // 2, len(attack_map) // 2)
+    rel_pos_bot = {}
+    for r in visible:
+        if not check_vis(r):
+            continue
+        if r['team'] != team:
+            rel_pos_bot[(r['x'] - loc[0], r['y'] - loc[1])] = 1
+        else:
+            rel_pos_bot[(r['x'] - loc[0], r['y'] - loc[1])] = -1
 
-    for botv in visible:
-        rel_pos = (centroid[0] + (botv['x'] - loc[0]), centroid[1] + (botv['y'] - loc[1]))
-        for i in range(-1,2):
-            for k in range(-1,2):
-                attk_map_pos = (rel_pos[0] + i, rel_pos[1] + k)
-                if attk_map_pos[0] < 0 or attk_map_pos[0] >= size or attk_map_pos[1] < 0 or attk_map_pos >= size:
+    for y in range(-attkmax,attkmax+1):
+        for x in range(-attkmax,attkmax+1):
+            if x**2 + y**2 > attackmax or x**2 + y**2 < attackmin:
+                continue
+            attack_pos = (x + centroid[0], y + centroid[1])
+            for splash in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
+                hit = splash[0]+attack_pos[0], splash[1]+attack_pos[1]
+                if hit[0] < 0 or hit[1] < 0 or hit [0] >= size or hit[1] >= size:
                     continue
+                if (hit[0] - centroid[0], hit[1] - centroid[1]) in rel_pos_bot:
+                    # pprint("Modifying Map")
+                    attack_map[hit[1]][hit[0]] = attack_map[hit[1]][hit[0]] + rel_pos_bot[(hit[0] - centroid[0], hit[1] - centroid[1])]
 
-                if botv['team'] != team:
-                    attack_map[attk_map_pos[1]][attk_map_pos[0]] += 1
-                else:
-                    attack_map[attk_map_pos[1]][attk_map_pos[0]] -= 1
+    pprint(str(visible))
+    max_point = (0,0)
+    hits = attack_map[centroid[1]][centroid[0]]
+    for y in range(-attkmax,attkmax+1):
+        for x in range(-attkmax,attkmax+1):
+            if x**2 + y**2 > attackmax or x**2 + y**2 < attackmin:
+                continue
 
-    max_pos = centroid
-    for i in range(size):
-        for k in range(size):
-            if attack_map[max_pos[1]][max_pos[0]] < attack_map[i][k]:
-                max_pos = (k,i)
+            if attack_map[y + centroid[1]][x + centroid[0]] > hits:
+                max_point = (x, y)
+                hits = attack_map[y + centroid[1]][x + centroid[0]]
 
-    return (max_pos[0] - centroid[0], max_pos[1] - centroid[1])
+    pprint(str(attack_map))
+
+    return max_point
 
 
 def resource_occupied(self,SPECS,me,loc,target,visible):

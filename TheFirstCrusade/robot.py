@@ -95,6 +95,12 @@ class MyRobot(BCAbstractRobot):
                 if r['unit'] == SPECS['CASTLE'] and self.me['team'] == r['team']:
                     castle_loc = (r['x'],r['y'])
 
+                # if not self.destination is None:
+                #     # self.log("BOOM CHICKA BOW WOW")
+                #     if (r['x'],r['y']) == self.destination:
+                #         if util.euclidianDistance((self.me['x'],self.me['y']),self.destination) <= 5:
+                #             self.destination, self.defense_fields = nav.defense_2(self.log, self.get_passable_map(), castle_loc, in_vision, self.defense_fields)
+
                 in_vision.append(r)
                 dist = (r['x'] - self.me['x'])**2 + (r['y'] - self.me['y'])**2
                 if r['team'] != self.me['team'] and SPECS['UNITS'][SPECS["PROPHET"]]['ATTACK_RADIUS'][0] <= dist <= SPECS['UNITS'][SPECS["PROPHET"]]['ATTACK_RADIUS'][1]:
@@ -131,13 +137,14 @@ class MyRobot(BCAbstractRobot):
                 else:
                     self.log("Found Castle")
                     # self.destination = nav.defense(self.get_passable_map(), self.get_visible_robot_map(), my_coord)
-                    self.destination = nav.defense_2(self.log, self.get_passable_map(), castle_loc, in_vision, self.defense_fields) 
+                    self.destination, self.defense_fields = nav.defense_2(self.log, self.get_passable_map(), castle_loc, in_vision, self.defense_fields) 
 
             if my_coord[0]==self.destination[0] and my_coord[1]==self.destination[1]:
                 self.log("CURRENTLY STANDING AT "+my_coord)
                 self.log("DEFENDING MY DESTINATION AT "+self.destination)
                 self.defending = True
                 return
+
             self.log("Trying to move to "+ self.destination)
             path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
             action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
@@ -248,9 +255,6 @@ class MyRobot(BCAbstractRobot):
                     if i**2 + k**2 <= SPECS['UNITS'][SPECS['PREACHER']]['SPEED']:
                         moves.append((i,k))
 
-            if self.me['turn'] == 1:
-                self.homePath = (self.me['x'], self.me['y'])
-
             # get attackable robots
             attackable = []
             signal = -1
@@ -270,14 +274,14 @@ class MyRobot(BCAbstractRobot):
             if attackable:
                 # attack first robot
                 # r = attackable[0]['x'], attackable[0]['y']
-                r = nav.aiming((self.me['x'],self.me['y']), attackable, self.me['team'], SPECS['UNITS'][SPECS["PREACHER"]]['ATTACK_RADIUS'][0], SPECS['UNITS'][SPECS["PREACHER"]]['ATTACK_RADIUS'][1])
-                # self.log("Attack_pos: " + str(r1))
+                r = nav.aiming(self.is_visible, self.log, (self.me['x'],self.me['y']), visible, self.me['team'], SPECS['UNITS'][SPECS["PREACHER"]]['ATTACK_RADIUS'][0], SPECS['UNITS'][SPECS["PREACHER"]]['ATTACK_RADIUS'][1])
+                self.log("Attack_pos: " + str(r))
 
                 # self.log('attacking! ' + str(r) + ' at loc ' + (r['x'] - self.me['x'], r['y'] - self.me['y']))
-                return self.attack(r[0] - self.me['x'], r[1] - self.me['y'])
+                return self.attack(r[0], r[1])
 
             my_coord = (self.me['x'], self.me['y'])    
-            if self.moved<4 and self.fuel>5 and self.defense==True:
+            if self.moved<4 and self.fuel>5 and self.defense==True and False:
                 self.moved=self.moved+1
                 destination = my_coord
                 self.destination = nav.reflect(self.map, destination, nav.symmetric(self.get_fuel_map()))
@@ -286,7 +290,6 @@ class MyRobot(BCAbstractRobot):
                 return self.move(*action)
 
             else:
-                return
 
                 if not self.destination:
                     self.log("trying to move")
@@ -426,9 +429,9 @@ class MyRobot(BCAbstractRobot):
                         return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
             
             if self.me['turn']==3 and self.turnPos == 0:
-                self.log("Building a Preacher")
+                self.log("Building a Prophet")
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-                return self.build_unit(SPECS['PREACHER'], goal_dir[0], goal_dir[1])
+                return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
             if self.me['turn']<10:
                 self.log("Building a Prophet")
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
