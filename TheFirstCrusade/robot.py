@@ -283,8 +283,11 @@ class MyRobot(BCAbstractRobot):
 
             if attackable:
                 # attack first robot
+                # r = attackable[0]['x'], attackable[0]['y']
                 r = nav.aiming((self.me['x'],self.me['y']), attackable, self.me['team'], SPECS['UNITS'][SPECS["PREACHER"]]['ATTACK_RADIUS'][0], SPECS['UNITS'][SPECS["PREACHER"]]['ATTACK_RADIUS'][1])
-                self.log('attacking! ' + str(r) + ' at loc ' + (r['x'] - self.me['x'], r['y'] - self.me['y']))
+                # self.log("Attack_pos: " + str(r1))
+
+                # self.log('attacking! ' + str(r) + ' at loc ' + (r['x'] - self.me['x'], r['y'] - self.me['y']))
                 return self.attack(r[0] - self.me['x'], r[1] - self.me['y'])
 
             my_coord = (self.me['x'], self.me['y'])    
@@ -620,6 +623,7 @@ class MyRobot(BCAbstractRobot):
                     karb=self.karbonite
                     fuel=self.fuel
                     self.should_build_church=nav.church_or_no(self,my_loc,self.map,self.get_visible_robots(),karb,fuel)
+
                     self.log('should i build a church'+self.should_build_church)
                     if not self.should_build_church:
                         self.log('this is funs')

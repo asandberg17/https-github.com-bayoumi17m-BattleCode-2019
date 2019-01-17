@@ -244,10 +244,13 @@ def distance(x1,y1):
 
 def astar(pprint,vis,full_map,start,goal,moves):
 
-    # visible = []
-    # for v in range(len(vis)):
-    #     if util.nodeHash(*start) != util.nodeHash(vis[v]['x'], vis[v]['x']):
-    #          visible.append(util.nodeHash(vis[v]['x'], vis[v]['x']))
+    start_time = time.time()
+    visible = []
+    for v in range(8320):
+        visible.append(0)
+
+    for v in vis:
+        visible[int(util.nodeHash(v['x'],v['y']))] = 1
 
     # pprint(str(vis))
 
@@ -297,13 +300,15 @@ def astar(pprint,vis,full_map,start,goal,moves):
 
         # pprint(j,current_node.x,current_node.y,current_node.f)
 
-        if util.nodeHash(current_node.x,current_node.y) == util.nodeHash(end_node.x,end_node.y) or j >= 20:
+        if util.nodeHash(current_node.x,current_node.y) == util.nodeHash(end_node.x,end_node.y) or j > 100:
             # pprint("COMPLETE")
             path = []
             current = current_node
             while current != None:
                 path.insert(0,current)
                 current = current.parent
+
+            pprint("Time: " + str((time.time() - start_time)*1000))
             return path
 
         children = []
@@ -312,11 +317,8 @@ def astar(pprint,vis,full_map,start,goal,moves):
             newy = current_node.y + move[1]
 
             collision = False
-            for v in vis:
-                # pprint("Robot's Position: " + str((v['x'],v['y'])))
-                # pprint(str(newx == v['x'] and newy == v['y']))
-                if util.nodeHash(newx,newy) == util.nodeHash(v['x'],v['y']):
-                    collision = True
+            if visible[int(util.nodeHash(newx,newy))]:
+                collision = True
 
             if collision:
                 # pprint("collision")
@@ -649,7 +651,7 @@ def get_closest_dropoff(self, visible):
             if dist<best_dist:
                 best_dist=dist
                 best=r
-                
+
     return best['x'],best['y']
 
 def aiming(loc, visible, team, attackmin, attackmax):
