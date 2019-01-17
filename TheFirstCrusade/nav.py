@@ -84,9 +84,9 @@ def reflect(full_map, loc, horizontal=True):
 
 def is_passable(full_map, loc, coord_dir, robot_map=None):
     new_point = (loc[0] + coord_dir[0], loc[1] + coord_dir[1])
-    if new_point[0] < 0 or new_point[0] > len(full_map):
+    if new_point[0] < 0 or new_point[0] >= len(full_map):
         return False
-    if new_point[1] < 0 or new_point[0] > len(full_map):
+    if new_point[1] < 0 or new_point[1] >= len(full_map):
         return False
     if not full_map[new_point[1]][new_point[0]]:
         return False
@@ -210,16 +210,16 @@ def symmetric(full_map):
 
     while not full_map[coord1[1]][coord1[0]]:
         coord1=randint(0,l),randint(0,l)
-    coord1_h=coord1[0],l-1-coord1[1]
+    coord1_h=coord1[0],l-coord1[1]
     while not full_map[coord2[1]][coord2[0]]:
         coord2=randint(0,l),randint(0,l)
-    coord2_h=coord2[0],l-1-coord2[1]
+    coord2_h=coord2[0],l-coord2[1]
     while not full_map[coord3[1]][coord3[0]]:
         coord3=randint(0,l),randint(0,l)
-    coord3_h=coord3[0],l-1-coord3[1]
+    coord3_h=coord3[0],l-coord3[1]
     while not full_map[coord4[1]][coord4[0]]:
         coord4=randint(0,l),randint(0,l)
-    coord4_h=coord4[0],l-1-coord4[1]
+    coord4_h=coord4[0],l-coord4[1]
 
 
 
@@ -462,29 +462,30 @@ def defense_2(pprint, full_map, castle_loc, visible, defense_fields):
     return defense_pos
 
 
-def get_closest_resources(pprint,loc,map,fuel_map,karbonite_map):
+def get_closest_resources(pprint,loc,full_map,fuel_map,karbonite_map):
     closest_resources=[]
     closest_resources_large=[]
 
     #ill get the closest resources in a radius of 25, then ill go through that list and make all the resources in a radius of two,
     #then each castle or church should send pilgrims to any in their radius two circle then send three more out to the next two elements
     #on the radius 25 list
-    x_start=loc[0]-len(map)/2
-    y_start=loc[1]-len(map)/2
+    x_start=loc[0]-(len(full_map)//2)
+    y_start=loc[1]-(len(full_map)//2)
     if x_start<0:
         x_start=0
     if y_start<0:
         y_start=0
-    x_end=loc[0]+len(map)/2
-    y_end=loc[1]+len(map)/2
-    if x_end>len(map):
-        x_end=len(map)
-    if y_end>len(map):
-        y_end=len(map)
+    x_end=loc[0]+(len(full_map)//2)
+    y_end=loc[1]+(len(full_map)//2)
+    if x_end>len(full_map):
+        x_end=len(full_map)
+    if y_end>len(full_map):
+        y_end=len(full_map)
     for x in range(x_start,x_end):
         for y in range(y_start,y_end):
             if fuel_map[y][x] or karbonite_map[y][x]:
-                closest_resources_large.append([x,y])
+                pprint("Adding Resource: " + str([x,y]))
+                closest_resources_large.append((x,y))
     
     x_start=loc[0]-2
     x_end=loc[0]+3
@@ -494,25 +495,26 @@ def get_closest_resources(pprint,loc,map,fuel_map,karbonite_map):
         x_start=0
     if y_start<0:
         y_start=0
-    if x_end>len(map):
-        x_end=len(map)
-    if y_end>len(map):
-        y_end=len(map)
+    if x_end>len(full_map):
+        x_end=len(full_map)
+    if y_end>len(full_map):
+        y_end=len(full_map)
     for x in range(x_start,x_end):
         for y in range(y_start,y_end):
             if fuel_map[y][x] or karbonite_map[y][x]:
-                closest_resources.append([x,y])
+                closest_resources.append((x,y))
 
 
     #now have order both lists by distance
-    quickSort(closest_resources,closest_resources[0],closest_resources[len(closest_resources)+1],loc)
-    quickSort(closest_resources_large,closest_resources_large[0],closest_resources_large[len(closest_resources_large)+1],loc)
+    # quickSort(closest_resources,closest_resources[0],closest_resources[len(closest_resources)+1],loc)
+    # quickSort(closest_resources_large,closest_resources_large[0],closest_resources_large[len(closest_resources_large)+1],loc)
     if len(closest_resources)<len(closest_resources_large):
-        closest_resources.append(closest_resources_large[len(closest_resources)+1])
+        closest_resources.append(closest_resources_large[len(closest_resources)])
     if len(closest_resources)<len(closest_resources_large):
-        closest_resources.append(closest_resources_large[len(closest_resources)+1])
-    pprint("my closest resources are"+closest_resources)
+        closest_resources.append(closest_resources_large[len(closest_resources)])
+    pprint("my closest resources are "+ str(closest_resources))
     return closest_resources
+
 def quickSort(l,min,max,loc):
     if min<max:
         j=partition(l,min,max,loc)
@@ -577,7 +579,7 @@ def church_or_no(me,loc,map,visible,karb,fuel):
 
 #return the coordinates of a good buidling site
 #use self.get_visible_robot_map() for this
-def church_build_site(pprint,loc,map,fuel_map,karbonite_map):
+def church_build_site(pprint,loc,full_map,fuel_map,karbonite_map):
     #like attackable want to get all the tiles that are in vision that have resources
     #loop through grid around loc
     # center = loc[0]-2,loc[1]-2
@@ -586,7 +588,9 @@ def church_build_site(pprint,loc,map,fuel_map,karbonite_map):
     y_start=loc[1]-2
     for x in range(x_start,loc[0]+3):
         for y in range (y_start,loc[1]+3):
-            if x<len(map) and y<len(map) and x>-1 and y>-1 and fuel_map[y][x]==True or karbonite_map[y][x]==True:
+            if x >= len(full_map) or y >= len(full_map) or x < 0 or y < 0:
+                continue
+            if fuel_map[y][x]==True or karbonite_map[y][x]==True:
                 resources.append([x,y])
     #now we have all the tiles nearby that have resources, have to find a sort of center
     x_cent=0
@@ -599,13 +603,36 @@ def church_build_site(pprint,loc,map,fuel_map,karbonite_map):
     y_cent=int(y_cent/len(resources))
     site=(x_cent,y_cent)
     #we now have the geographical middle but it may not be a whole number and it may not be a buildable location
-    dir=[(1,1),(-1,-1),(0,1),(1,0),(0,-1),(-1,0),(0,2),(2,0),(0,-2),(2,0)]
+    dirs=[(1,1),(-1,-1),(0,1),(0,-1),(1,0),(-1,0),(0,2),(0,-2),(-2,0),(2,0)]
     i=0
-    while map[site[1]][site[0]] !=True or fuel_map[site[1]][site[0]] or karbonite_map[site[1]][site[0]]:
-        if i >= len(dir):
+    init_site = site
+    # pprint("Site: " + str(site))
+    # pprint(full_map[site[1]][site[0]])
+    # pprint(fuel_map[site[1]][site[0]])
+    # pprint(karbonite_map[site[1]][site[0]])
+    # if full_map[site[1]][site[0]] != True or fuel_map[site[1]][site[0]] or karbonite_map[site[1]][site[0]]:
+    #     site2 = apply_dir(site,dirs[i])
+    #     pprint("Site2: " + site2)
+    #     i = i + 1
+    #     if site2[0] < 0 or site2[1] < 0 or site2[0] >= len(full_map) or site2[1] >= len(full_map):
+    #         site2 = apply_dir(site2,dirs[i])
+    #         i = i + 1
+        # pprint(full_map[site2[1]][site2[0]])
+        # pprint(full_map[site2[1]][site2[0]])
+        # pprint(fuel_map[site2[1]][site2[0]])
+        # pprint(karbonite_map[site2[1]][site2[0]])
+    
+    while full_map[site[1]][site[0]] != True or fuel_map[site[1]][site[0]] or karbonite_map[site[1]][site[0]]:
+        if i >= len(dirs):
             break
-        site=apply_dir(site,dir[i])
+        site=apply_dir(site,dirs[i])
         i=i+1
+
+        if site[0] < 0 or site[1] < 0 or site[0] >= len(full_map) or site[1] >= len(full_map):
+            site = init_site
+
+
+    # return (loc[0]-1,loc[1]-1)
     return site
 
 def get_closest_dropoff(self, visible):
@@ -618,10 +645,11 @@ def get_closest_dropoff(self, visible):
         # now all in vision range, can see x, y etc
         dist = (r['x'] - self.me['x'])**2 + (r['y'] - self.me['y'])**2
         #check of 
-        if r['team'] == self.me['team'] and (r['unit']=='1' or r['unit']==0):
+        if r['team'] == self.me['team'] and (r['unit']==1 or r['unit']==0):
             if dist<best_dist:
                 best_dist=dist
                 best=r
+                
     return best['x'],best['y']
 
 def aiming(loc, visible, team, attackmin, attackmax):
@@ -662,25 +690,42 @@ def aiming(loc, visible, team, attackmin, attackmax):
     return (max_pos[0] - centroid[0], max_pos[1] - centroid[1])
 
 
-def resource_occupied(me,loc,target,visible):
+def resource_occupied(self,SPECS,me,loc,target,visible):
+    # self.log("target: " + target[1])
+    # self.log("visible " + str(visible))
     for r in visible:
-        if r['x']==target[0] and r['y']==target[1] and r['unit']==2 and r.id !=me.id:
+        if not self.is_visible(r):
+            continue
+        if r['x'] == target[0] and r['y'] == target[1] and r['unit'] == SPECS['PILGRIM'] and r['id'] != me['id']:
             return True
     return False
 
 
 
-def new_resource_target(pprint,me,loc,map,fuel_map,karbonite_map,visible):
-    closest_resources=get_closest_resources(pprint,loc,map,fuel_map,karbonite_map)
+def new_resource_target(self,SPECS,pprint,me,loc,full_map,fuel_map,karbonite_map,visible):
+    closest_resources=get_closest_resources(pprint,loc,full_map,fuel_map,karbonite_map)
+    pprint("new resources: " + str(closest_resources))
     i=0
-    occupied=resource_occupied(me,loc,closest_resources[0],visible)
+    occupied=resource_occupied(self,SPECS,me,loc,closest_resources[0],visible)
     dist=distance(closest_resources[i],loc)
     pprint("got this far")
-    while occupied and i<len(closest_resources) and dist<100:
-        i=i+1
-        occupied=resource_occupied(me,loc,closest_resources[i],visible)
+    # pprint("Occupied: " + occupied)
+    # if occupied:
+    #     i = i + 1
+    #     occupied=resource_occupied(self,SPECS,me,loc,closest_resources[i],visible)
+    #     pprint("Occupied again? " + occupied)
+
+    while occupied:
+        if i >= len(closest_resources) - 1:
+            break
+        i += 1
+        pprint("closest_resources_new: " + str(closest_resources[i]))
+        occupied=resource_occupied(self,SPECS,me,loc,closest_resources[i],visible)
         dist=distance(closest_resources[i],loc)
+
+    pprint("Return Value: " + closest_resources[i])
     return closest_resources[i]
+    # return closest_resources[0]
 
 
 
