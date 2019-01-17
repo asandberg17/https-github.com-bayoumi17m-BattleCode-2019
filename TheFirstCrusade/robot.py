@@ -22,6 +22,7 @@ class MyRobot(BCAbstractRobot):
     coolDown = 0
     resources_sphere=[]
     castleBeaten = False
+    pilgrim=True
 
     defense = True
     has_moved=False
@@ -433,6 +434,22 @@ class MyRobot(BCAbstractRobot):
                 self.log("Building a Prophet")
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
+
+            if self.me['turn']<30:
+                if self.karbonite>20:
+                    if self.pilgrim==True and self.pilgrims_built<len(self.resources_sphere):
+                        targetX, targetY = self.resources_sphere[self.pilgrims_built]
+                        targetX = str(targetX); targetY = str(targetY)
+                        self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
+
+                        self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                        goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                        self.pilgrims_built=self.pilgrims_built+1
+                        return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+                    else:
+                        self.log('Building a Crusader')
+                        goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                        return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
             # elif self.me['turn'] < 30:
 
 
@@ -594,7 +611,7 @@ class MyRobot(BCAbstractRobot):
                                 #now free to build church
                                 return self.build_unit(SPECS['CHURCH'],self.build_site[0]-my_loc[0],self.build_site[1]-my_loc[1]) # Fixed to build only when adjacent!
                             #it shouldnt build the church anymore so now there is a church in range it should go there
-                            self.closest_dropoff=nav.get_closest_dropoff(self,self.get_visible_robots())
+                            self.closest_dropoff=nav.get_closest_dropoff(self,self.get_visible_robots(),self.homePath)
                             path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
                             action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                             return self.move(*action)
@@ -623,7 +640,7 @@ class MyRobot(BCAbstractRobot):
                     self.log('should i build a church'+self.should_build_church)
                     if not self.should_build_church:
                         self.log('this is funs')
-                        self.closest_dropoff=nav.get_closest_dropoff(self,self.get_visible_robots())
+                        self.closest_dropoff=nav.get_closest_dropoff(self,self.get_visible_robots(),self.homePath)
                     if self.should_build_church:
                         self.log('whoops')
                         #we should build a church so get a good build location

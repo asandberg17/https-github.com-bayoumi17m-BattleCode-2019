@@ -635,7 +635,7 @@ def church_build_site(pprint,loc,full_map,fuel_map,karbonite_map):
     # return (loc[0]-1,loc[1]-1)
     return site
 
-def get_closest_dropoff(self, visible):
+def get_closest_dropoff(self, visible,homePath):
     best=None
     best_dist=1000
     for r in visible:
@@ -649,8 +649,9 @@ def get_closest_dropoff(self, visible):
             if dist<best_dist:
                 best_dist=dist
                 best=r
-                
-    return best['x'],best['y']
+    if best!=None:          
+        return best['x'],best['y']
+    return homePath
 
 def aiming(loc, visible, team, attackmin, attackmax):
     attkmax = int(math.sqrt(attackmax))
