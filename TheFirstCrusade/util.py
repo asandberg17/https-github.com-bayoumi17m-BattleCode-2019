@@ -179,7 +179,7 @@ def crossBranch():
     return random.randint(1,4)
 
 def crossLength():
-    return 9
+    return 27
 
 def crossAngle(branch):
     return math.pi*branch / 2
