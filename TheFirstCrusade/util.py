@@ -92,6 +92,10 @@ def manhattanDistance( xy1, xy2 ):
     "Returns the Manhattan distance between points xy1 and xy2"
     return abs( xy1[0] - xy2[0] ) + abs( xy1[1] - xy2[1] )
 
+def euclidianDistance( xy1, xy2 ):
+    "Returns the Manhattan distance between points xy1 and xy2"
+    return ( xy1[0] - xy2[0] )**2 + ( xy1[1] - xy2[1] )**2
+
 def countVisited(visited):
     size = len(visited)
     count = 0
@@ -151,18 +155,19 @@ def uniqify(seq, idfun=None):
        result.append(item)
    return result
 
-def insertionSort(arr): 
+def insertionSortLoc(pprint, arr, loc):
   
     # Traverse through 1 to len(arr) 
     for i in range(1, len(arr)): 
   
-        key = arr[i] 
+        key = arr[i]
+        # pprint(str(arr))
   
         # Move elements of arr[0..i-1], that are 
         # greater than key, to one position ahead 
         # of their current position 
         j = i-1
-        while j >=0 and key < arr[j] : 
+        while j >=0 and euclidianDistance(key,loc) < euclidianDistance(arr[j],loc) : 
                 arr[j+1] = arr[j] 
                 j -= 1
         arr[j+1] = key

@@ -508,13 +508,16 @@ def get_closest_resources(pprint,loc,full_map,fuel_map,karbonite_map):
 
 
     #now have order both lists by distance
+    util.insertionSortLoc(pprint, closest_resources, loc)
+    util.insertionSortLoc(pprint, closest_resources_large, loc)
     # quickSort(closest_resources,closest_resources[0],closest_resources[len(closest_resources)+1],loc)
     # quickSort(closest_resources_large,closest_resources_large[0],closest_resources_large[len(closest_resources_large)+1],loc)
     if len(closest_resources)<len(closest_resources_large):
         closest_resources.append(closest_resources_large[len(closest_resources)])
     if len(closest_resources)<len(closest_resources_large):
         closest_resources.append(closest_resources_large[len(closest_resources)])
-    pprint("my closest resources are "+ str(closest_resources))
+    pprint("my closest resources are "+ str(closest_resources) + " with a location of: " + str(loc))
+    pprint(str(closest_resources_large))
     return closest_resources
 
 def quickSort(l,min,max,loc):
@@ -651,14 +654,10 @@ def get_closest_dropoff(self, visible,homePath):
             if dist<best_dist:
                 best_dist=dist
                 best=r
-<<<<<<< HEAD
+
     if best!=None:          
         return best['x'],best['y']
     return homePath
-=======
-
-    return best['x'],best['y']
->>>>>>> 7ee2f1550de1de741dcad2cc400ce5adfb000598
 
 def aiming(loc, visible, team, attackmin, attackmax):
     attkmax = int(math.sqrt(attackmax))
