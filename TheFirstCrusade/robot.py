@@ -198,56 +198,6 @@ class MyRobot(BCAbstractRobot):
             # self.log("Fuel: " + str(self.fuel))
             return self.move(*action)
 
-
-            
-            # # The directions: North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest
-            # my_coord = (self.me['x'], self.me['y'])
-            # self.already_been[my_coord] = True
-            # # self.log(nav.symmetric(self.map)) #for some reason this would sometimes throw an error
-            # # self.log("My destination is "+self.destination)
-            # if not self.destination:
-            #     self.log("trying to move")
-            #     self.destination = nav.reflect(self.map, my_coord, nav.symmetric(self.map))
-            # self.log("Trying to move to "+ self.destination)
-
-            # goal_dir=nav.goto(my_coord, self.destination, self.map, self.get_visible_robot_map(), self.already_been)
-            # x=0
-            # jump_dir=goal_dir
-            # while x<2:
-            #     loc=nav.apply_dir(my_coord,jump_dir)
-            #     self.already_been[loc] = True
-            #     goal_dir=nav.goto(loc, self.destination, self.map, self.get_visible_robot_map(), self.already_been)
-            #     x=x+1
-            #     jump_dir=jump_dir[0]+goal_dir[0],jump_dir[1]+goal_dir[1]
-
-            # if jump_dir[0]**2+jump_dir[1]**2>9:
-            #     self.log("not sure")
-            #     jump_dir=jump_dir[0]-goal_dir[0],jump_dir[1]-goal_dir[1]
-            #     if nav.symmetric(self.map):
-            #         jump_dirh=jump_dirh[0],jump_dir[1]+1
-            #         loc=nav.apply_dir(my_coord,jump_dir)
-            #         self.log("hi")
-            #         if jump_dirh[0]**2+jump_dirh[1]**2<9 and nav.is_passable(self.map,loc,jump_dirh,self.get_visible_robot_map()):
-            #             return self.move(*jump_dirh[0],jump_dir[1]+1)
-            #         else:
-            #             return self.move(*jump_dir)
-            #     else:
-            #         jump_dirv=jump_dir[0]+1,jump_dir[1]
-            #         loc=nav.apply_dir(my_coord,jump_dir)
-            #         self.log("bye")
-            #         if jump_dirv[0]**2+jump_dirv[1]**2<9 and nav.is_passable(self.map,loc,jump_dirv,self.get_visible_robot_map()):
-            #             return self.move(*jump_dirv)
-            #         else:
-            #             return self.move(*jump_dir)
-
-            # self.log("why")
-            # loc=nav.apply_dir(my_coord,jump_dir)
-            # self.log("this should not even be returning "+loc)
-            # return self.move(*jump_dir)
-            # goal_dir=nav.goto(my_coord, self.destination, self.map, self.get_visible_robot_map(), self.already_been)
-            # #return self.move(*nav.goto(my_coord, self.destination, self.map, self.get_visible_robot_map(), self.already_been))
-            # self.log(goal_dir)
-            # return self.move(*goal_dir)
                
         elif self.me['unit'] == SPECS['PREACHER']:
             self.log("Preahcer health: " + str(self.me['health'])) 
@@ -284,8 +234,11 @@ class MyRobot(BCAbstractRobot):
 
             if attackable:
                 # attack first robot
+                # r = attackable[0]['x'], attackable[0]['y']
                 r = nav.aiming((self.me['x'],self.me['y']), attackable, self.me['team'], SPECS['UNITS'][SPECS["PREACHER"]]['ATTACK_RADIUS'][0], SPECS['UNITS'][SPECS["PREACHER"]]['ATTACK_RADIUS'][1])
-                self.log('attacking! ' + str(r) + ' at loc ' + (r['x'] - self.me['x'], r['y'] - self.me['y']))
+                # self.log("Attack_pos: " + str(r1))
+
+                # self.log('attacking! ' + str(r) + ' at loc ' + (r['x'] - self.me['x'], r['y'] - self.me['y']))
                 return self.attack(r[0] - self.me['x'], r[1] - self.me['y'])
 
             my_coord = (self.me['x'], self.me['y'])    
@@ -376,7 +329,7 @@ class MyRobot(BCAbstractRobot):
             my_coord = (self.me['x'], self.me['y'])
             # self.log(str(SPECS['UNITS'][SPECS['CRUSADER']]))
 
-            if self.castles != [] and self.me['turn'] % 30 != 0:
+            if self.castles != [] and self.me['turn'] % 30 != 0: # Why was this condition added?
                 attack_castle = self.castleLoc[self.castles[0]]
                 self.log(str(attack_castle))
                 self.signal(int(util.nodeHash(*attack_castle)),10)
@@ -394,6 +347,7 @@ class MyRobot(BCAbstractRobot):
                     self.log("Sending Y loc: " + str(self.me['y'] + 192))
                     for bot in self.get_visible_robots():
                         if bot.castle_talk > 0:
+                            self.turnPos += 1
                             self.castleLoc[bot['id']] = (-1, bot.castle_talk - 192)
                 elif self.me['turn'] == 2:
                     self.castle_talk(self.me['x'] + 192)
@@ -637,6 +591,7 @@ class MyRobot(BCAbstractRobot):
                     karb=self.karbonite
                     fuel=self.fuel
                     self.should_build_church=nav.church_or_no(self,my_loc,self.map,self.get_visible_robots(),karb,fuel)
+
                     self.log('should i build a church'+self.should_build_church)
                     if not self.should_build_church:
                         self.log('this is funs')
