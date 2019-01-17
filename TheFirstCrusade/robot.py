@@ -566,7 +566,9 @@ class MyRobot(BCAbstractRobot):
                         if self.should_build_church==True:
                             if my_loc[0]-self.build_site[0]<2 and my_loc[1]-self.build_site[1]<2:
                                 #check once more if the church has to be built
-                                self.should_build_church=nav.church_or_no(self,my_loc,self.map,self.get_visible_robots())
+                                total_karb=self.karbonite+self.me.karbonite
+                                total_fuel=self.fuel+self.me.fuel
+                                self.should_build_church=nav.church_or_no(self,my_loc,self.map,self.get_visible_robots(),total_karb,total_fuel)
                                 #now build the church if possible
                                 if  self.should_build_church:
                                     #now free to build church
@@ -592,7 +594,9 @@ class MyRobot(BCAbstractRobot):
                     else:
                         self.log('im trying bob')
                         #checking to see if we should build a church  
-                        self.should_build_church=nav.church_or_no(self,my_loc,self.map,self.get_visible_robots())
+                        total_karb=self.karbonite+self.me.karbonite
+                        total_fuel=self.fuel+self.me.fuel
+                        self.should_build_church=nav.church_or_no(self,my_loc,self.map,self.get_visible_robots(),total_karb,total_fuel)
                         self.log('should i build a church'+self.should_build_church)
                         if not self.should_build_church:
                             self.closest_dropoff=nav.get_closest_dropoff(self,self.get_visible_robots())
