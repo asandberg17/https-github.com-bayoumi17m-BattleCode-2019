@@ -430,7 +430,7 @@ class MyRobot(BCAbstractRobot):
                 return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
 
 
-            elif self.me['turn'] < 20:
+            elif self.me['turn'] < 30:
 
 
                     # self.log(str(self.castleLoc))
@@ -445,7 +445,7 @@ class MyRobot(BCAbstractRobot):
                     self.log("Building a Prophet at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
                     return self.build_unit(SPECS['PROPHET'], goal_dir[0],goal_dir[1])
 
-            elif self.me['turn'] < 25:
+            elif self.me['turn'] < 40:
 
                 self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
                 if not self.resources_sphere:

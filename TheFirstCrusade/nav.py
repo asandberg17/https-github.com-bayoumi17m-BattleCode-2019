@@ -210,16 +210,16 @@ def symmetric(full_map):
 
     while not full_map[coord1[1]][coord1[0]]:
         coord1=randint(0,l),randint(0,l)
-    coord1_h=coord1[0],l-1-coord1[1]
+    coord1_h=coord1[0],l-coord1[1]
     while not full_map[coord2[1]][coord2[0]]:
         coord2=randint(0,l),randint(0,l)
-    coord2_h=coord2[0],l-1-coord2[1]
+    coord2_h=coord2[0],l-coord2[1]
     while not full_map[coord3[1]][coord3[0]]:
         coord3=randint(0,l),randint(0,l)
-    coord3_h=coord3[0],l-1-coord3[1]
+    coord3_h=coord3[0],l-coord3[1]
     while not full_map[coord4[1]][coord4[0]]:
         coord4=randint(0,l),randint(0,l)
-    coord4_h=coord4[0],l-1-coord4[1]
+    coord4_h=coord4[0],l-coord4[1]
 
 
 
@@ -645,10 +645,11 @@ def get_closest_dropoff(self, visible):
         # now all in vision range, can see x, y etc
         dist = (r['x'] - self.me['x'])**2 + (r['y'] - self.me['y'])**2
         #check of 
-        if r['team'] == self.me['team'] and (r['unit']=='1' or r['unit']==0):
+        if r['team'] == self.me['team'] and (r['unit']==1 or r['unit']==0):
             if dist<best_dist:
                 best_dist=dist
                 best=r
+                
     return best['x'],best['y']
 
 def aiming(loc, visible, team, attackmin, attackmax):
