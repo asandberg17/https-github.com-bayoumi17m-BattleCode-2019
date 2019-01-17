@@ -136,8 +136,8 @@ class MyRobot(BCAbstractRobot):
                     self.destination = nav.defense(self.get_passable_map(), self.get_visible_robot_map(), my_coord)
                 else:
                     self.log("Found Castle")
-                    # self.destination = nav.defense(self.get_passable_map(), self.get_visible_robot_map(), my_coord)
-                    self.destination, self.defense_fields = nav.defense_2(self.log, self.get_passable_map(), castle_loc, in_vision, self.defense_fields) 
+                    self.destination = nav.defense(self.get_passable_map(), self.get_visible_robot_map(), my_coord)
+                    # self.destination, self.defense_fields = nav.defense_2(self.log, self.get_passable_map(), castle_loc, in_vision, self.defense_fields) 
 
             if my_coord[0]==self.destination[0] and my_coord[1]==self.destination[1]:
                 self.log("CURRENTLY STANDING AT "+my_coord)
@@ -429,6 +429,8 @@ class MyRobot(BCAbstractRobot):
                         return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
             
             if self.me['turn']==3 and self.turnPos == 0:
+                # self.log("Turn Pos: " + self.turnPos)
+                # self.log("Castle Loc: " + str(self.castleLoc))
                 self.log("Building a Prophet")
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
