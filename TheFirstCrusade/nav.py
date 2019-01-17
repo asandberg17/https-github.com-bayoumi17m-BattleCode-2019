@@ -242,14 +242,16 @@ def distance(x1,y1):
     y_dist = x1[1] - y1[1] 
     return x_dist**2 + y_dist**2
 
-def astar(pprint,vis,full_map,start,goal,moves):
+def astar(pprint,check_vis,vis,full_map,start,goal,moves):
 
-    start_time = time.time()
+    # start_time = time.time()
     visible = []
     for v in range(8320):
         visible.append(0)
 
     for v in vis:
+        if not check_vis(v):
+            continue
         visible[int(util.nodeHash(v['x'],v['y']))] = 1
 
     # pprint(str(vis))
@@ -308,7 +310,7 @@ def astar(pprint,vis,full_map,start,goal,moves):
                 path.insert(0,current)
                 current = current.parent
 
-            pprint("Time: " + str((time.time() - start_time)*1000))
+            # pprint("Time: " + str((time.time() - start_time)*1000))
             return path
 
         children = []
@@ -721,7 +723,7 @@ def new_resource_target(self,SPECS,pprint,me,loc,full_map,fuel_map,karbonite_map
     #     occupied=resource_occupied(self,SPECS,me,loc,closest_resources[i],visible)
     #     pprint("Occupied again? " + occupied)
 
-    while occupied:
+    while occupied and dist < 100:
         if i >= len(closest_resources) - 1:
             break
         i += 1

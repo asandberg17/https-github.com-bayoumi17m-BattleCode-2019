@@ -23,6 +23,7 @@ class MyRobot(BCAbstractRobot):
     resources_sphere=[]
     castleBeaten = False
     pilgrim=True
+    turnPos = 0
 
     defense = True
     has_moved=False
@@ -117,7 +118,7 @@ class MyRobot(BCAbstractRobot):
                 self.defending = True
                 return
             self.log("Trying to move to "+ self.destination)
-            path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+            path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
             action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
             #return self.move(*nav.goto(my_coord, self.destination, self.map, self.get_visible_robot_map(), self.already_been))
             self.log(action)
@@ -178,14 +179,14 @@ class MyRobot(BCAbstractRobot):
                 self.destination = nav.reflect(self.map, destination, nav.symmetric(self.map))
 
             # self.log("Signal: " + str(signal))
-            if signal >= 0:
-                self.destination = nav.reflect(self.map, util.unHash(signal), nav.symmetric(self.map))
+            # if signal >= 0:
+            #     self.destination = nav.reflect(self.map, util.unHash(signal), nav.symmetric(self.map))
 
             self.log("My destination is " + self.destination)
             if (self.destination[0]-my_coord[0])**2 + (self.destination[1]-my_coord[1])**2 < 10:
                 self.log("Holding my ground")
-                self.destination = self.homePath
-                path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                self.destination = self.homePath # Change to next castle
+                path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                 if self.castleBeaten: 
                     self.castle_talk(111)
@@ -195,13 +196,14 @@ class MyRobot(BCAbstractRobot):
                 self.log('just a little closer')
                 # destination = my_coord
                 self.moved=self.moved+1
-                path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                # self.log("Path length: " + str(len(path)))
                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                 return self.move(*action)
-            if self.squad !=True:
+            if self.squad != True:
                 self.squad=nav.homies(self,SPECS,my_coord,self.get_visible_robots(),self.me['team'])
             if self.squad==True:
-                path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
 
                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                 # self.log("Cost: " + str((action[0]**2 + action[1]**2)*SPECS['UNITS'][SPECS['CRUSADER']]['FUEL_PER_MOVE']))
@@ -258,7 +260,7 @@ class MyRobot(BCAbstractRobot):
                 self.moved=self.moved+1
                 destination = my_coord
                 self.destination = nav.reflect(self.map, destination, nav.symmetric(self.get_fuel_map()))
-                path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                 return self.move(*action)
 
@@ -281,14 +283,14 @@ class MyRobot(BCAbstractRobot):
                 if (self.destination[0]-my_coord[0])**2 + (self.destination[1]-my_coord[1])**2 < 10:
                     self.log("Holding my ground")
                     self.destination = self.homePath
-                    path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                    path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
                     self.log("Length of path: " + len(path))
                     action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                     return self.move(*action)
                     # return
 
 
-                path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
 
                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                 # self.log("Cost: " + str((action[0]**2 + action[1]**2)*SPECS['UNITS'][SPECS['CRUSADER']]['FUEL_PER_MOVE']))
@@ -301,24 +303,24 @@ class MyRobot(BCAbstractRobot):
             self.log("karbonite: " + str(self.karbonite))
             #initializing my coordinates
             my_coord = (self.me['x'], self.me['y'])
-            if self.coolDown > 0:
-                self.coolDown -= 1
+            # if self.coolDown > 0:
+            #     self.coolDown -= 1
 
-            attacker_return = False
-            if self.me['turn'] >= 3:
-                terminated = False
-                for bot in self.get_visible_robots():
-                    if self.is_visible(bot):
-                        if bot['unit'] == SPECS['CRUSADER'] or bot['unit'] == SPECS['PREACHER']:
-                            attacker_return = True
-                    if bot.castle_talk == 111:
-                        self.log("terminated message")
-                        if attacker_return:
-                            terminated = True
-                        self.coolDown = 30
-                        break
-                if terminated:
-                    self.castles.pop(0)
+            # attacker_return = False
+            # if self.me['turn'] >= 3:
+            #     terminated = False
+            #     for bot in self.get_visible_robots():
+            #         if self.is_visible(bot):
+            #             if bot['unit'] == SPECS['CRUSADER'] or bot['unit'] == SPECS['PREACHER']:
+            #                 attacker_return = True
+            #         if bot.castle_talk == 111:
+            #             self.log("terminated message")
+            #             if attacker_return:
+            #                 terminated = True
+            #             self.coolDown = 30
+            #             break
+            #     if terminated:
+            #         self.castles.pop(0)
 
             if self.me['turn'] == 3:
                 for bot in self.get_visible_robots():
@@ -341,12 +343,12 @@ class MyRobot(BCAbstractRobot):
             my_coord = (self.me['x'], self.me['y'])
             # self.log(str(SPECS['UNITS'][SPECS['CRUSADER']]))
 
-            if self.castles != [] and self.me['turn'] % 30 != 0: # Why was this condition added?
-                attack_castle = self.castleLoc[self.castles[0]]
-                self.log(str(attack_castle))
-                self.signal(int(util.nodeHash(*attack_castle)),10)
-            else:
-                pass
+            # if self.castles != [] and self.me['turn'] % 30 != 0: # Why was this condition added?
+            #     attack_castle = self.castleLoc[self.castles[0]]
+            #     # self.log(str(attack_castle))
+            #     # self.signal(int(util.nodeHash(*attack_castle)),10)
+            # else:
+            #     pass
                 # self.log("HOW DID THIS HAPPEN!!")
 
             # self.log(str(self.numCastles))
@@ -377,14 +379,46 @@ class MyRobot(BCAbstractRobot):
                     fuel_map=self.get_fuel_map()
                     self.resources_sphere=nav.get_closest_resources(self.log,my_coord,self.map,karbonite_map,fuel_map)
                     self.log(self.resources_sphere)
-                if self.me['turn']==1:
-                    self.log("Building a preacher")
-                    goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-                    return self.build_unit(SPECS['PREACHER'], goal_dir[0], goal_dir[1])
-                if self.me['turn']==2:
+                if self.me['turn']==1 and self.turnPos == 0:
                     #builds and send a pilgrim to its target first turn
                     targetX, targetY = self.resources_sphere[self.pilgrims_built]
                     targetX = str(targetX); targetY = str(targetY)
+                    if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL']+2 and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
+                        self.log("Sending to target: (" + targetX + ", " + targetY + ")")
+                        self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
+
+                        self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                        goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                        self.pilgrims_built=self.pilgrims_built+1
+                        return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+                if self.me['turn']==2 and self.turnPos == 0:
+                    #builds and send a pilgrim to its target first turn
+                    targetX, targetY = self.resources_sphere[self.pilgrims_built]
+                    targetX = str(targetX); targetY = str(targetY)
+                    if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL']+2 and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
+                        self.log("Sending to target: (" + targetX + ", " + targetY + ")")
+                        self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
+
+                        self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                        goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                        self.pilgrims_built=self.pilgrims_built+1
+                        return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+            
+            if self.me['turn']==3 and self.turnPos == 0:
+                self.log("Building a Preacher")
+                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                return self.build_unit(SPECS['PREACHER'], goal_dir[0], goal_dir[1])
+            if self.me['turn']<10:
+                self.log("Building a Prophet")
+                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
+
+            if self.pilgrims_built<len(self.resources_sphere) and self.me['turn']<50 and self.me['turn']%3==0:
+                targetX, targetY = self.resources_sphere[self.pilgrims_built]
+                targetX = str(targetX); targetY = str(targetY)
+                if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL']+2 and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
+
+                    self.log("Sending to target: (" + targetX + ", " + targetY + ")")
                     self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
 
                     self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
@@ -392,16 +426,9 @@ class MyRobot(BCAbstractRobot):
                     self.pilgrims_built=self.pilgrims_built+1
                     return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
 
-            if self.me['turn']==3:
-                self.log("Building a Prophet")
-                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-                return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
-            if self.me['turn']<10:
-                self.log("Building a Prophet")
-                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-                return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
-
-            if self.pilgrims_built<len(self.resources_sphere) and self.me['turn']<50 and self.me['turn']%3==0:
+            if self.me['turn']<100:
+                if self.karbonite>20:
+                    if self.pilgrim==True and self.pilgrims_built<len(self.resources_sphere):
                         targetX, targetY = self.resources_sphere[self.pilgrims_built]
                         targetX = str(targetX); targetY = str(targetY)
                         self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
@@ -410,22 +437,10 @@ class MyRobot(BCAbstractRobot):
                         goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                         self.pilgrims_built=self.pilgrims_built+1
                         return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
-
-            # if self.me['turn']<100:
-            #     if self.karbonite>20:
-            #         if self.pilgrim==True and self.pilgrims_built<len(self.resources_sphere):
-            #             targetX, targetY = self.resources_sphere[self.pilgrims_built]
-            #             targetX = str(targetX); targetY = str(targetY)
-            #             self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
-
-            #             self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-            #             goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-            #             self.pilgrims_built=self.pilgrims_built+1
-            #             return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
-            #         else:
-                        # self.log('Building a Crusader')
-                        # goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-                        # return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
+                    else:
+                        self.log('Building a Crusader')
+                        goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                        return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
             # if self.me['turn']<150:
             #     if self.me['turn']%3==0:
             #         self.log('Building a Crusader')
@@ -491,8 +506,6 @@ class MyRobot(BCAbstractRobot):
             #         self.log("Building a Preacher at " + str(self.me['x']+goal_dir[0]) + ", " + str(self.me['y']+goal_dir[1]))
             #         return self.build_unit(SPECS['PREACHER'], goal_dir[0],goal_dir[1])
 
-            else:
-                pass
         
         elif self.me['unit']==SPECS['PILGRIM']:
             self.log('Happy Thanksgiving!')
@@ -518,7 +531,7 @@ class MyRobot(BCAbstractRobot):
                 parsePoint = int(signal[0])
                 y = int(signal[parsePoint+1:])
                 x = int(signal[1:parsePoint+1])
-                # self.log("Signal is: " + signal + " and target is: " + str((x,y)))
+                self.log("Signal is: " + signal + " and target is: " + str((x,y)))
 
                 # self.wave[y][x] = 2
                 self.target=(x,y)
@@ -536,6 +549,7 @@ class MyRobot(BCAbstractRobot):
 
             #checking if it is possible to dropoff
             # if self.me['turn'] > 1:
+            self.log("Target: " + str(self.target) + ", Current Loc: " + str(my_loc))
 
             karbMiner = self.get_karbonite_map()[self.target[1]][self.target[0]]
             # self.log("TARGET: " + self.target)
@@ -598,7 +612,7 @@ class MyRobot(BCAbstractRobot):
                 #             return self.move(*action)
                 #so it must not be dropping off and it must be moving to the target
                 self.log("Moving!")
-                path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), my_loc, (self.target), moves)
+                path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, (self.target), moves)
                 # self.log("Path: " + str(path[1].x))
                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                 self.log("Action: " + str(action[0]) + ", " + str(action[1]))
@@ -616,7 +630,7 @@ class MyRobot(BCAbstractRobot):
                 # #sadly he cannot dropoff
                 elif self.dropping_off==True and self.should_build_church==False:
                     self.log('back to moving')
-                    path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
+                    path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
                     action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                     return self.move(*action)
                 
@@ -645,7 +659,7 @@ class MyRobot(BCAbstractRobot):
                 #so no matter what, even if were not building a church, we want to move to the dropoff site
                 self.dropping_off=True
                 self.log('back to moving')
-                path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
+                path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                 return self.move(*action)
 
