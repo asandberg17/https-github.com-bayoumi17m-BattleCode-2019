@@ -508,13 +508,16 @@ def get_closest_resources(pprint,loc,full_map,fuel_map,karbonite_map):
 
 
     #now have order both lists by distance
+    util.insertionSortLoc(pprint, closest_resources, loc)
+    util.insertionSortLoc(pprint, closest_resources_large, loc)
     # quickSort(closest_resources,closest_resources[0],closest_resources[len(closest_resources)+1],loc)
     # quickSort(closest_resources_large,closest_resources_large[0],closest_resources_large[len(closest_resources_large)+1],loc)
     if len(closest_resources)<len(closest_resources_large):
         closest_resources.append(closest_resources_large[len(closest_resources)])
     if len(closest_resources)<len(closest_resources_large):
         closest_resources.append(closest_resources_large[len(closest_resources)])
-    pprint("my closest resources are "+ str(closest_resources))
+    pprint("my closest resources are "+ str(closest_resources) + " with a location of: " + str(loc))
+    pprint(str(closest_resources_large))
     return closest_resources
 
 def quickSort(l,min,max,loc):
@@ -651,6 +654,10 @@ def get_closest_dropoff(self, visible,homePath):
             if dist<best_dist:
                 best_dist=dist
                 best=r
+<<<<<<< HEAD
+=======
+
+>>>>>>> c6090d0b784b1077c776081c526e99e2a8db6217
     if best!=None:          
         return best['x'],best['y']
     return homePath
@@ -725,7 +732,6 @@ def new_resource_target(self,SPECS,pprint,me,loc,full_map,fuel_map,karbonite_map
         pprint("closest_resources_new: " + str(closest_resources[i]))
         occupied=resource_occupied(self,SPECS,me,loc,closest_resources[i],visible)
         dist=distance(closest_resources[i],loc)
-
     pprint("Return Value: " + closest_resources[i])
     return closest_resources[i]
     # return closest_resources[0]
