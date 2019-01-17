@@ -45,8 +45,9 @@ class MyRobot(BCAbstractRobot):
     closest_dropoff=(0,0)
     target=(0,0)
     dropping_off=False
-    visited = []
     mapSize = 0
+
+    progress = 1e10
 
     already_been = {}
     base = None
@@ -54,6 +55,25 @@ class MyRobot(BCAbstractRobot):
 
     def turn(self):
         # self.log(str(self.me))
+        # size = len(self.get_passable_map())
+        # map_pass = self.get_passable_map()
+        # maps = "["
+        # for i in range(size):
+        #     maps = maps +"["
+        #     for k in range(size):
+        #         if map_pass[i][k]:
+        #             maps = maps + "0"
+        #         else:
+        #             maps = maps + "1"
+        #         if k != size - 1:
+        #             maps = maps + ","
+        #     maps = maps + "]"
+        #     if i != size - 1:
+        #             maps = maps + ","
+
+        # self.log(maps + "]")
+
+
         if self.me['unit'] == SPECS['PROPHET']:
             self.log("Prophet health: " + str(self.me['health']))
             attack_order = {SPECS['PREACHER']: 1, SPECS['CRUSADER']: 3, SPECS['PROPHET']: 2}
@@ -284,7 +304,7 @@ class MyRobot(BCAbstractRobot):
                     self.log("Holding my ground")
                     self.destination = self.homePath
                     path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
-                    self.log("Length of path: " + len(path))
+                    # self.log("Length of path: " + len(path))
                     action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                     return self.move(*action)
                     # return
@@ -511,6 +531,7 @@ class MyRobot(BCAbstractRobot):
             self.log('Happy Thanksgiving!')
             my_loc = (self.me['x'], self.me['y'])
             moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
+            self.log("Progress: " + str(self.progress))
 
             #getting first turn target from castle
             if self.me['turn'] == 1:
@@ -535,6 +556,7 @@ class MyRobot(BCAbstractRobot):
 
                 # self.wave[y][x] = 2
                 self.target=(x,y)
+                self.progress = util.euclidianDistance(self.target,my_loc)
                 # self.log("The target is: " + str((self.targetX,self.targetY)))
 
                 # moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
@@ -584,6 +606,7 @@ class MyRobot(BCAbstractRobot):
 
                 if my_loc[0]==self.target[0] and my_loc[1]==self.target[1]:
                     self.log('Mining')
+                    self.progress = 1e10
                     return self.mine()
                 #so the bot isnt at the target so it must be moving, either dropping off or going to build a church to dropoff
                 if nav.distance(self.target,my_loc) < 100:
@@ -613,7 +636,9 @@ class MyRobot(BCAbstractRobot):
                 #so it must not be dropping off and it must be moving to the target
                 self.log("Moving!")
                 path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, (self.target), moves)
-                # self.log("Path: " + str(path[1].x))
+                # self.log("Path: " + str(path))
+                if self.progress > util.euclidianDistance(my_loc, self.target):
+                        self.progress = util.euclidianDistance(my_loc, self.target)
                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                 self.log("Action: " + str(action[0]) + ", " + str(action[1]))
                 self.log(action)
@@ -626,10 +651,13 @@ class MyRobot(BCAbstractRobot):
                     self.log('what is going on')
                     #so the bot can drop off so it should and keep going with its life
                     self.dropping_off=False
+                    self.progress = 1e10
                     return self.give(botv['x'] - self.me['x'],botv['y'] - self.me['y'], self.me['karbonite'], self.me['fuel'])
                 # #sadly he cannot dropoff
                 elif self.dropping_off==True and self.should_build_church==False:
                     self.log('back to moving')
+                    if self.progress > util.euclidianDistance(my_loc, self.closest_dropoff):
+                        self.progress = util.euclidianDistance(my_loc, self.closest_dropoff)
                     path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
                     action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                     return self.move(*action)
@@ -659,6 +687,8 @@ class MyRobot(BCAbstractRobot):
                 #so no matter what, even if were not building a church, we want to move to the dropoff site
                 self.dropping_off=True
                 self.log('back to moving')
+                if self.progress > util.euclidianDistance(my_loc, self.closest_dropoff):
+                        self.progress = util.euclidianDistance(my_loc, self.closest_dropoff)
                 path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                 return self.move(*action)
@@ -692,141 +722,141 @@ class MyRobot(BCAbstractRobot):
 
 
 
-        # elif self.me['unit'] == SPECS['PILGRIM']:
-        #     self.log("Let us feast with the Indians")
-        #     self.log('karbonite:'+self.karbonite)
-        #     self.log('Fuel:'+self.fuel)
-        #     # self.log('I should build a church:'+self.should_build_church)
-        #     my_loc=(self.me['x'],self.me['y'])
-        #     if self.me['turn'] == 1:
-        #         # Map Building
-        #         # fuelMap = self.fuel_map
-        #         self.homePath = my_loc
-        #         self.closest_dropoff = my_loc
+        # # elif self.me['unit'] == SPECS['PILGRIM']:
+        # #     self.log("Let us feast with the Indians")
+        # #     self.log('karbonite:'+self.karbonite)
+        # #     self.log('Fuel:'+self.fuel)
+        # #     # self.log('I should build a church:'+self.should_build_church)
+        # #     my_loc=(self.me['x'],self.me['y'])
+        # #     if self.me['turn'] == 1:
+        # #         # Map Building
+        # #         # fuelMap = self.fuel_map
+        # #         self.homePath = my_loc
+        # #         self.closest_dropoff = my_loc
 
-        #         # Read Signal!
-        #         signal = ""
-        #         for botv in self.get_visible_robots():
-        #             if self.is_radioing(botv) and botv['unit'] == SPECS["CASTLE"]:
-        #                 signal = str(botv['signal'])
-        #                 break
+        # #         # Read Signal!
+        # #         signal = ""
+        # #         for botv in self.get_visible_robots():
+        # #             if self.is_radioing(botv) and botv['unit'] == SPECS["CASTLE"]:
+        # #                 signal = str(botv['signal'])
+        # #                 break
 
-        #         parsePoint = int(signal[0])
-        #         y = int(signal[parsePoint+1:])
-        #         x = int(signal[1:parsePoint+1])
-        #         # self.log("Signal is: " + signal + " and target is: " + str((x,y)))
+        # #         parsePoint = int(signal[0])
+        # #         y = int(signal[parsePoint+1:])
+        # #         x = int(signal[1:parsePoint+1])
+        # #         # self.log("Signal is: " + signal + " and target is: " + str((x,y)))
 
-        #         # self.wave[y][x] = 2
-        #         self.targetX = x
-        #         self.targetY = y
-        #         # self.log("The target is: " + str((self.targetX,self.targetY)))
+        # #         # self.wave[y][x] = 2
+        # #         self.targetX = x
+        # #         self.targetY = y
+        # #         # self.log("The target is: " + str((self.targetX,self.targetY)))
 
-        #         moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
-        #         path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), my_loc, (self.target), moves)
-        #         # for node in path:
-        #         #     self.log("Path " + str((node.x,node.y)))
-        #         action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
-        #         # self.log("Trying to move by: " + str(action) + " from " + str((self.me['x'],self.me['y'])))
-        #         return self.move(*action)
+        # #         moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
+        # #         path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), my_loc, (self.target), moves)
+        # #         # for node in path:
+        # #         #     self.log("Path " + str((node.x,node.y)))
+        # #         action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+        # #         # self.log("Trying to move by: " + str(action) + " from " + str((self.me['x'],self.me['y'])))
+        # #         return self.move(*action)
 
-        #     if self.me['turn'] > 1:
+        # #     if self.me['turn'] > 1:
 
-        #         karbMiner = self.get_karbonite_map()[self.target[1]][self.target[0]]
-        #         # self.log("karbMiner: " + str(karbMiner))
-        #         drop_off = False
-        #         for botv in self.get_visible_robots():
-        #             if botv['unit'] == SPECS['CASTLE'] or botv['unit'] == SPECS['CHURCH']:
-        #                 for giving in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
-        #                     if util.nodeHash(giving[0]+self.me['x'], giving[1]+self.me['y']) == util.nodeHash(botv['x'],botv['y']):
-        #                         drop_off = True
-        #                         break;
+        # #         karbMiner = self.get_karbonite_map()[self.target[1]][self.target[0]]
+        # #         # self.log("karbMiner: " + str(karbMiner))
+        # #         drop_off = False
+        # #         for botv in self.get_visible_robots():
+        # #             if botv['unit'] == SPECS['CASTLE'] or botv['unit'] == SPECS['CHURCH']:
+        # #                 for giving in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:
+        # #                     if util.nodeHash(giving[0]+self.me['x'], giving[1]+self.me['y']) == util.nodeHash(botv['x'],botv['y']):
+        # #                         drop_off = True
+        # #                         break;
 
-        #             if drop_off:
-        #                 break
+        # #             if drop_off:
+        # #                 break
 
-        #         if karbMiner:
-        #             energy = 'karbonite'
-        #             capacity = SPECS['UNITS'][SPECS['PILGRIM']]['KARBONITE_CAPACITY']
-        #         else:
-        #             energy = 'fuel'
-        #             capacity = SPECS['UNITS'][SPECS['PILGRIM']]['FUEL_CAPACITY']
+        # #         if karbMiner:
+        # #             energy = 'karbonite'
+        # #             capacity = SPECS['UNITS'][SPECS['PILGRIM']]['KARBONITE_CAPACITY']
+        # #         else:
+        # #             energy = 'fuel'
+        # #             capacity = SPECS['UNITS'][SPECS['PILGRIM']]['FUEL_CAPACITY']
 
-        #         # botv_pos = []
-        #         # for botv in self.get_visible_robots():
-        #         #     botv_pos.append(util.nodeHash(botv.x,botv.y))
+        # #         # botv_pos = []
+        # #         # for botv in self.get_visible_robots():
+        # #         #     botv_pos.append(util.nodeHash(botv.x,botv.y))
                     
-        #         if util.nodeHash(self.me['x'],self.me['y']) == util.nodeHash(self.targetX,self.targetY) and self.me[energy] < capacity:
-        #             self.log("MINING")
-        #             # self.log(energy + " " + str(self.me[energy]) + "/" + str(capacity))
-        #             visible=self.get_visible_robots()
-        #             self.should_build_church=nav.church_or_no(self,(self.me['x'],self.me['y']),visible)
-        #             return self.mine()
+        # #         if util.nodeHash(self.me['x'],self.me['y']) == util.nodeHash(self.targetX,self.targetY) and self.me[energy] < capacity:
+        # #             self.log("MINING")
+        # #             # self.log(energy + " " + str(self.me[energy]) + "/" + str(capacity))
+        # #             visible=self.get_visible_robots()
+        # #             self.should_build_church=nav.church_or_no(self,(self.me['x'],self.me['y']),visible)
+        # #             return self.mine()
                 
-        #         elif self.should_build_church and not self.build_site[0]-my_loc[0]<2 and not self.build_site[1]-my_loc[1]<2:
-        #             # This is always False unless the self.build_site attribute is to the lower right of pilgrim location! 
-        #             # This is because the value will only be greater than two is the location is > 2 to the lower right diagonal (or 8r^2)
-        #             self.log('checking if a church is necessary')
-        #             #check if a church is still necessary
-        #             visible=self.get_visible_robots()
-        #             self.should_build_church=nav.church_or_no(self,(self.me['x'],self.me['y']),visible)
-        #             if not self.should_build_church:
-        #                 #now there is a church in range and it should go there
-        #                 self.closest_dropoff=nav.get_closest_dropoff(self,visible)
-        #             #now move to where the dropoff point should be
-        #             path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
+        # #         elif self.should_build_church and not self.build_site[0]-my_loc[0]<2 and not self.build_site[1]-my_loc[1]<2:
+        # #             # This is always False unless the self.build_site attribute is to the lower right of pilgrim location! 
+        # #             # This is because the value will only be greater than two is the location is > 2 to the lower right diagonal (or 8r^2)
+        # #             self.log('checking if a church is necessary')
+        # #             #check if a church is still necessary
+        # #             visible=self.get_visible_robots()
+        # #             self.should_build_church=nav.church_or_no(self,(self.me['x'],self.me['y']),visible)
+        # #             if not self.should_build_church:
+        # #                 #now there is a church in range and it should go there
+        # #                 self.closest_dropoff=nav.get_closest_dropoff(self,visible)
+        # #             #now move to where the dropoff point should be
+        # #             path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
 
-        #         elif self.should_build_church and self.build_site[0]-my_loc[0]<2 and self.build_site[1]-my_loc[1]<2:
-        #             self.log('we have moved closed enough to build the church')
-        #             #check if a church is still necessary
-        #             visible=self.get_visible_robots()
-        #             self.should_build_church=nav.church_or_no(self,(self.me['x'],self.me['y']),visible)
-        #             if not self.should_build_church:
-        #                 #now there is a church in range and it should go there
-        #                 self.closest_dropoff=nav.get_closest_dropoff(self,visible)
-        #                 path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
-        #                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
-        #                 return self.move(*action)
+        # #         elif self.should_build_church and self.build_site[0]-my_loc[0]<2 and self.build_site[1]-my_loc[1]<2:
+        # #             self.log('we have moved closed enough to build the church')
+        # #             #check if a church is still necessary
+        # #             visible=self.get_visible_robots()
+        # #             self.should_build_church=nav.church_or_no(self,(self.me['x'],self.me['y']),visible)
+        # #             if not self.should_build_church:
+        # #                 #now there is a church in range and it should go there
+        # #                 self.closest_dropoff=nav.get_closest_dropoff(self,visible)
+        # #                 path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
+        # #                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+        # #                 return self.move(*action)
 
-        #             #now it should build the church
-        #             self.should_build_church=False  
-        #             self.build_site=nav.church_build_site(self.log,my_loc,self.map,self.get_fuel_map(),self.get_karbonite_map())
-        #             self.closest_dropoff=self.build_site
-        #             self.log("trying to build a church at "+self.build_site)
-        #             return self.build_unit(SPECS['CHURCH'],self.build_site[0]-my_loc[0],self.build_site[1]-my_loc[1])
+        # #             #now it should build the church
+        # #             self.should_build_church=False  
+        # #             self.build_site=nav.church_build_site(self.log,my_loc,self.map,self.get_fuel_map(),self.get_karbonite_map())
+        # #             self.closest_dropoff=self.build_site
+        # #             self.log("trying to build a church at "+self.build_site)
+        # #             return self.build_unit(SPECS['CHURCH'],self.build_site[0]-my_loc[0],self.build_site[1]-my_loc[1])
 
-        #         elif self.me[energy] < capacity and util.nodeHash(self.me['x'],self.me['y']) != util.nodeHash(self.targetX,self.targetY):
-        #             self.log("Moving!!!")
-        #             moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
-        #             path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), my_loc, (self.targetX,self.targetY), moves)
-        #             action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
-        #             return self.move(*action)
+        # #         elif self.me[energy] < capacity and util.nodeHash(self.me['x'],self.me['y']) != util.nodeHash(self.targetX,self.targetY):
+        # #             self.log("Moving!!!")
+        # #             moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
+        # #             path = nav.astar(self.log, self.get_visible_robots(), self.get_passable_map(), my_loc, (self.targetX,self.targetY), moves)
+        # #             action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+        # #             return self.move(*action)
 
 
-        #         #FOR SOME REASON THIS WAS NOT ASSIGNING THINGS WELL
-        #         elif self.me[energy] == capacity and util.nodeHash(*self.closest_dropoff) != util.nodeHash(*my_loc) and not drop_off:
-        #             self.log('I got this far! Im full')
-        #             # self.log("WORKING LOOP")
-        #             visible = self.get_visible_robots()
-        #             moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
-        #             self.should_build_church=nav.church_or_no(self,(self.me['x'],self.me['y']),visible)
-        #             self.log('Maybe a church now:'+self.should_build_church)
-        #             if self.should_build_church:
-        #                 self.log('here2')
-        #                 self.build_site=nav.church_build_site(self.log,my_loc,self.map,self.get_fuel_map(),self.get_karbonite_map())
-        #                 self.log('my build site is'+self.build_site)
-        #                 self.closest_dropoff=self.build_site
-        #             if self.should_build_church and self.build_site[0]-my_loc[0]<2 and self.build_site[1]-my_loc[1]<2:
-        #                 self.log("trying to build a church at "+self.build_site)
-        #                 return self.build_unit(SPECS['CHURCH'],self.build_site[0]-my_loc[0],self.build_site[1]-my_loc[1])
+        # #         #FOR SOME REASON THIS WAS NOT ASSIGNING THINGS WELL
+        # #         elif self.me[energy] == capacity and util.nodeHash(*self.closest_dropoff) != util.nodeHash(*my_loc) and not drop_off:
+        # #             self.log('I got this far! Im full')
+        # #             # self.log("WORKING LOOP")
+        # #             visible = self.get_visible_robots()
+        # #             moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
+        # #             self.should_build_church=nav.church_or_no(self,(self.me['x'],self.me['y']),visible)
+        # #             self.log('Maybe a church now:'+self.should_build_church)
+        # #             if self.should_build_church:
+        # #                 self.log('here2')
+        # #                 self.build_site=nav.church_build_site(self.log,my_loc,self.map,self.get_fuel_map(),self.get_karbonite_map())
+        # #                 self.log('my build site is'+self.build_site)
+        # #                 self.closest_dropoff=self.build_site
+        # #             if self.should_build_church and self.build_site[0]-my_loc[0]<2 and self.build_site[1]-my_loc[1]<2:
+        # #                 self.log("trying to build a church at "+self.build_site)
+        # #                 return self.build_unit(SPECS['CHURCH'],self.build_site[0]-my_loc[0],self.build_site[1]-my_loc[1])
                     
 
-        #             path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
-        #             action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
-        #             return self.move(*action)
+        # #             path = nav.astar(self.log,self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
+        # #             action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+        # #             return self.move(*action)
 
 
-        #         elif drop_off and self.me[energy] == capacity:
+        # #         elif drop_off and self.me[energy] == capacity:
                     
-        #             return self.give(botv['x'] - self.me['x'],botv['y'] - self.me['y'], self.me['karbonite'], self.me['fuel'])
+        # #             return self.give(botv['x'] - self.me['x'],botv['y'] - self.me['y'], self.me['karbonite'], self.me['fuel'])
             
 robot = MyRobot()

@@ -244,7 +244,7 @@ def distance(x1,y1):
 
 def astar(pprint,check_vis,vis,full_map,start,goal,moves):
 
-    # start_time = time.time()
+    start_time = time.time()
     visible = []
     for v in range(8320):
         visible.append(0)
@@ -302,7 +302,7 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
 
         # pprint(j,current_node.x,current_node.y,current_node.f)
 
-        if util.nodeHash(current_node.x,current_node.y) == util.nodeHash(end_node.x,end_node.y) or j > 100:
+        if util.nodeHash(current_node.x,current_node.y) == util.nodeHash(end_node.x,end_node.y) or (time.time() - start_time)*1000 > 20:
             # pprint("COMPLETE")
             path = []
             current = current_node
