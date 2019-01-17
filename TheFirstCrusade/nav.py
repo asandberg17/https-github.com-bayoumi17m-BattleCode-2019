@@ -581,7 +581,7 @@ def church_or_no(me,loc,map,visible,karb,fuel):
         dist=distance(bot_loc,loc)
         # pprint('i am this far away'+dist +'from a bot that is at'+bot_loc)
         # pprint('and i am at '+loc)
-        if r['team'] == me.me['team'] and (r['unit']=='1' or r['unit']=='0') and dist<10:
+        if r['team'] == me.me['team'] and (r['unit']=='1' or r['unit']=='0') and dist<3:
             churches.append(r)
 
     # pprint(str(churches))
@@ -595,7 +595,7 @@ def church_or_no(me,loc,map,visible,karb,fuel):
 
 #return the coordinates of a good buidling site
 #use self.get_visible_robot_map() for this
-def church_build_site(pprint,loc,full_map,fuel_map,karbonite_map):
+def church_build_site(me,SPECS,pprint,loc,full_map,fuel_map,karbonite_map,robot_map):
     #like attackable want to get all the tiles that are in vision that have resources
     #loop through grid around loc
     # center = loc[0]-2,loc[1]-2
@@ -619,37 +619,64 @@ def church_build_site(pprint,loc,full_map,fuel_map,karbonite_map):
     y_cent=int(y_cent/len(resources))
     site=(x_cent,y_cent)
     #we now have the geographical middle but it may not be a whole number and it may not be a buildable location
-    dirs=[(1,1),(-1,-1),(0,1),(0,-1),(1,0),(-1,0),(0,2),(0,-2),(-2,0),(2,0)]
-    i=0
-    init_site = site
-    # pprint("Site: " + str(site))
-    # pprint(full_map[site[1]][site[0]])
-    # pprint(fuel_map[site[1]][site[0]])
-    # pprint(karbonite_map[site[1]][site[0]])
-    # if full_map[site[1]][site[0]] != True or fuel_map[site[1]][site[0]] or karbonite_map[site[1]][site[0]]:
-    #     site2 = apply_dir(site,dirs[i])
-    #     pprint("Site2: " + site2)
-    #     i = i + 1
-    #     if site2[0] < 0 or site2[1] < 0 or site2[0] >= len(full_map) or site2[1] >= len(full_map):
-    #         site2 = apply_dir(site2,dirs[i])
-    #         i = i + 1
-        # pprint(full_map[site2[1]][site2[0]])
-        # pprint(full_map[site2[1]][site2[0]])
-        # pprint(fuel_map[site2[1]][site2[0]])
-        # pprint(karbonite_map[site2[1]][site2[0]])
-    
-    while full_map[site[1]][site[0]] != True or fuel_map[site[1]][site[0]] or karbonite_map[site[1]][site[0]]:
-        if i >= len(dirs):
-            break
-        site=apply_dir(site,dirs[i])
-        i=i+1
-
-        if site[0] < 0 or site[1] < 0 or site[0] >= len(full_map) or site[1] >= len(full_map):
-            site = init_site
-
-
+    dirs=[(0,1),
+    (1,1),
+    (1,0),
+    (1,-1),
+    (0,-1),
+    (-1, -1),
+    (-1, 0),
+    (-1, 1)]
+    temp=site
+    site_final=site
+    x=temp[0]
+    y=temp[1]
+    if not fuel_map[y][x] and not karbonite_map[y][x]:
+        num=number_adjacent_resources(pprint,site,full_map,fuel_map,karbonite_map)
+    else:
+        num=0
+    for i in range(0,len(dirs)):
+        temp=apply_dir(site,dirs[i])
+        x=temp[0]
+        y=temp[1]
+        if robot_map[y][x]>0:
+            if me.get_robot(robot_map[y][x])['unit']==SPECS['CHURCH'] or me.get_robot(robot_map[y][x])['unit']==SPECS['CASTLE']:
+                continue
+        # pprint('testing '+temp)
+        # pprint('fuel '+fuel_map[y][x])
+        # pprint('karb '+karbonite_map[y][x])
+        if fuel_map[y][x] or karbonite_map[y][x]:
+            continue
+        if full_map[y][x]:
+            temp_num=number_adjacent_resources(pprint,temp,full_map,fuel_map,karbonite_map)
+            # pprint('number of adjacent resources '+temp_num)
+            if temp_num>num:
+                site_final=temp
+                num=temp_num
     # return (loc[0]-1,loc[1]-1)
-    return site
+    return site_final
+
+def number_adjacent_resources(pprint,site,full_map,fuel_map,karbonite_map):
+    start_x=site[0]-1
+    num_resources=0
+    if start_x<0:
+        start_x=0
+    start_y=site[1]-1
+    if start_y<0:
+        start_y=0
+    end_x=site[0]+2
+    if end_x>len(full_map):
+        end_x=len(full_map)
+    end_y=site[1]+2
+    if end_y>len(full_map):
+        end_y=len(full_map)
+    # pprint('start x '+start_x)
+    for x in range(start_x,end_x):
+        for y in range(start_y,end_y):
+            # pprint('resources at '+x+','+y)
+            if fuel_map[y][x] or karbonite_map[y][x]:
+                num_resources=num_resources+1
+    return num_resources
 
 def get_closest_dropoff(self, visible,homePath):
     best=None
@@ -807,6 +834,27 @@ def get_closest_resources_church(pprint,loc,robot_map,full_map,fuel_map,karbonit
     if len(closest_resources)<len(closest_resources_large):
         closest_resources.append(closest_resources_large[len(closest_resources)])
     return closest_resources
+
+
+
+def get_closest_resources_pilgrim(pprint,loc,robot_map,full_map,fuel_map,karbonite_map):
+    closest_resources_large=[]
+    #getting all the closest resources where a pilgrim is
+    if x_end>len(full_map):
+        x_end=len(full_map)
+    if y_end>len(full_map):
+        y_end=len(full_map)
+    for x in range(0,len(full_map)):
+        for y in range(0,len(full_map)):
+            if (fuel_map[y][x] or karbonite_map[y][x]) and robot_map[y][x]<=0:
+                closest_resources_large.append((x,y))
+    
+
+    util.insertionSortLoc(pprint, closest_resources_large, loc)
+    # quickSort(closest_resources,closest_resources[0],closest_resources[len(closest_resources)+1],loc)
+    # quickSort(closest_resources_large,closest_resources_large[0],closest_resources_large[len(closest_resources_large)+1],loc)
+
+    return closest_resources_large
 
 
 
