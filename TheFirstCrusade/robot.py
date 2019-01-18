@@ -80,6 +80,9 @@ class MyRobot(BCAbstractRobot):
             attack_order = {SPECS['PREACHER']: 1, SPECS['CRUSADER']: 3, SPECS['PROPHET']: 2}
 
             visible = self.get_visible_robots()
+            full_map = self.get_passable_map()
+            fuel_map = self.get_fuel_map()
+            karbonite_map = self.get_karbonite_map()
 
             # get attackable robots
             attackable = []
@@ -133,12 +136,12 @@ class MyRobot(BCAbstractRobot):
                 self.log("trying to move")
                 # self.log(str(castle_loc == (-1,-1)))
                 if castle_loc == (-1,-1):
-                    self.destination = nav.defense(self.get_passable_map(), self.get_visible_robot_map(), my_coord)
+                    self.destination = nav.defense(full_map, self.get_visible_robot_map(), my_coord)
                 else:
                     self.log("Found Castle")
-                    self.destination = nav.defense(self.get_passable_map(), self.get_visible_robot_map(), my_coord)
+                    # self.destination = nav.defense(self.get_passable_map(), self.get_visible_robot_map(), my_coord)
                     # self.destination, self.defense_fields = nav.defense_2(self.log, self.get_passable_map(), castle_loc, in_vision, self.defense_fields) 
-                    # self.destination = hilbert_defense(my_coord, castle_loc, nav.symmetric(), visible_map, full_map, fuel_map, karbonite_map, unit_type, team, SPECS)
+                    self.destination = hilbert_defense(my_coord, castle_loc, nav.symmetric(fuel_map), self.get_visible_robot_map(), full_map, fuel_map, karbonite_map, SPECS['PROPHET'], self.me['team'], SPECS)
 
             if my_coord[0]==self.destination[0] and my_coord[1]==self.destination[1]:
                 self.log("CURRENTLY STANDING AT "+my_coord)
