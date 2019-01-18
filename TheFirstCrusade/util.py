@@ -172,6 +172,29 @@ def insertionSortLoc(pprint, arr, loc):
                 j -= 1
         arr[j+1] = key
 
+
+def quadrant(x,y):
+    if x >= 0:
+        if y >= 0:
+            return 1
+        else:
+            return 4
+    else:
+        if y >= 0:
+            return 2
+        else:
+            return 3
+
+def quadSplit(arr):
+    quadrantSplits = [[],[],[],[]]
+
+    for element in arr:
+        quadrantSplits[quadrant(*element)-1].append(element)
+
+    # flat_list = [item for sublist in quadrantSplits for item in sublist]
+
+    return quadrantSplits
+
 def crossScale():
     return 1/3
 

@@ -138,6 +138,7 @@ class MyRobot(BCAbstractRobot):
                     self.log("Found Castle")
                     self.destination = nav.defense(self.get_passable_map(), self.get_visible_robot_map(), my_coord)
                     # self.destination, self.defense_fields = nav.defense_2(self.log, self.get_passable_map(), castle_loc, in_vision, self.defense_fields) 
+                    # self.destination = hilbert_defense(my_coord, castle_loc, nav.symmetric(), visible_map, full_map, fuel_map, karbonite_map, unit_type, team, SPECS)
 
             if my_coord[0]==self.destination[0] and my_coord[1]==self.destination[1]:
                 self.log("CURRENTLY STANDING AT "+my_coord)
@@ -263,6 +264,8 @@ class MyRobot(BCAbstractRobot):
                     self.log("Recieving Signal: " + str(r.signal))
                     signal = r.signal
                 # x = 5
+                if : 
+                    self.closest_dropoff = ()
                 if not self.is_visible(r):
                     # this robot isn't actually in our vision range, it just turned up because we heard its radio broadcast. disregard.
                     continue
@@ -325,6 +328,7 @@ class MyRobot(BCAbstractRobot):
             self.log("I AM A CASTLE HEAR ME ROAR")
             self.log("Fuel: " + str(self.fuel))
             self.log("karbonite: " + str(self.karbonite))
+            # self.log("Health: " + str(self.me['health']))
             #initializing my coordinates
             my_coord = (self.me['x'], self.me['y'])
             # if self.coolDown > 0:
@@ -347,6 +351,7 @@ class MyRobot(BCAbstractRobot):
             #         self.castles.pop(0)
 
             if self.me['turn'] == 3:
+                self.me['health'] = 1000
                 for bot in self.get_visible_robots():
                     if bot.castle_talk > 0:
                         temp = self.castleLoc[bot['id']]
@@ -409,7 +414,7 @@ class MyRobot(BCAbstractRobot):
                     targetX = str(targetX); targetY = str(targetY)
                     if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL']+2 and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
                         self.log("Sending to target: (" + targetX + ", " + targetY + ")")
-                        self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
+                        self.signal(int("" + str(len(targetX)) + targetX + targetY),4)
 
                         self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
@@ -421,7 +426,7 @@ class MyRobot(BCAbstractRobot):
                     targetX = str(targetX); targetY = str(targetY)
                     if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL']+2 and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
                         self.log("Sending to target: (" + targetX + ", " + targetY + ")")
-                        self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
+                        self.signal(int("" + str(len(targetX)) + targetX + targetY),4)
 
                         self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                         goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
