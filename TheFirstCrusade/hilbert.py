@@ -11,17 +11,19 @@ each dimension).  The number of unit hypercubes determine the possible
 discrete distances along the Hilbert curve (indexed from :math:`0` to
 :math:`2^{N p} - 1`).
 """
+import util
 
 
 def _binary_repr(num, width):
     """Return a binary string representation of `num` zero padded to `width`
     bits."""
-    return format(num, 'b').zfill(width)
+    # return format(num, 'b').zfill(width)
+    return util.dec2Bin(num,width)
 
 
 class HilbertCurve:
 
-    def __init__(self, p, n):
+    def __init__(self, pprint, p, n):
         """Initialize a hilbert curve with,
 
         Args:
@@ -34,6 +36,7 @@ class HilbertCurve:
             raise ValueError('n must be > 0')
         self.p = p
         self.n = n
+        self.log = pprint
 
         # maximum distance along curve
         self.max_h = 2**(self.p * self.n) - 1
@@ -52,7 +55,14 @@ class HilbertCurve:
                       (n components with values between 0 and 2**p-1)
         """
         h_bit_str = _binary_repr(h, self.p*self.n)
-        x = [int(h_bit_str[i::self.n], 2) for i in range(self.n)]
+        # self.log("h_bit_str is: " + str(h_bit_str) + "with inputs: " + str((h,self.p*self.n)))
+
+        x = []
+        # for i in range(self.n):
+        #     x.append(int(h_bit_str[i::self.n], 2))
+        x.append(util.bin2dec(h_bit_str[0]+h_bit_str[2]))
+        x.append(util.bin2dec(h_bit_str[1]+h_bit_str[3]))
+        # x = [int(h_bit_str[i::self.n], 2) for i in range(self.n)]
         return x
 
     def _transpose_to_hilbert_integer(self, x):
@@ -85,6 +95,7 @@ class HilbertCurve:
             raise ValueError('h={} but must be > 0'.format(h))
 
         x = self._hilbert_integer_to_transpose(h)
+        # self.log("x in hilber is: " + str(x))
         Z = 2 << (self.p-1)
 
         # Gray decode by H ^ (H/2)

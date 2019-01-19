@@ -5,8 +5,10 @@ import time
 import hilbert
 
 
-def hilbert_points(p):
+def hilbert_points(pprint,p):
     N = 2 # Number of Dimensions
+
+    pprint("P is: " + p)
 
     spacing = 2
 
@@ -18,9 +20,13 @@ def hilbert_points(p):
     cmax = max_coord + 0.5
 
     dx = 0.5*spacing
-    offset = -1
+    offset = -3
 
-    hc = hilbert.HilbertCurve(p, N)
+    hc = hilbert.HilbertCurve(pprint, p, N)
+
+    for i in range(2,p,-1):
+        offset += dx
+        dx *= 2
 
     sidep = 2**p
 
@@ -28,40 +34,45 @@ def hilbert_points(p):
     pts = []
     for i in range(npts):
         pts.append(hc.coordinates_from_distance(i))
-    pts = [
-        [spacing*(pt[0]*side/sidep) + offset,
-         spacing*(pt[1]*side/sidep) + offset]
-        for pt in pts]
+
+    # pprint("pts var is: " + str(pts))
+    
+    new_pts = []
+    for pt in pts:
+        new_pts.append((spacing*(pt[0]*side/sidep) + offset, spacing*(pt[1]*side/sidep) + offset))
 
     # Returns pts of defense relative to the castle
 
-    return pts
+    return new_pts
 
-def hilbert_defense(loc, castle_loc, h_symmetry, visible_map, full_map, fuel_map, karbonite_map, unit_type, team, SPECS):
+def hilbert_defense(pprint, loc, castle_loc, h_symmetry, visible_map, full_map, fuel_map, karbonite_map, unit_type, team, SPECS, type_seen):
     units = {SPECS['PROPHET']: 2, SPECS['PREACHER']: 1}
-    points = hilbert_points(units[unit_type])
+    points = hilbert_points(pprint, units[unit_type])[type_seen:]
     size = len(full_map)
-    quadrantSplit = util.quadSplit(points)
-    if h_symmetry and castle_loc[1] >= size // 2:
-        # We are on lower half so build top first
-        pts = [item for sublist in quadrantSplit for item in sublist]
-    elif h_symmetry and castle_loc[1] < size // 2: 
-        # We are on top half so build the bottom first
-        quadrantSplit[2], quadrantSplit[0] = quadrantSplit[0], quadrantSplit[2]
-        quadrantSplit[3], quadrantSplit[1] = quadrantSplit[1], quadrantSplit[3]
-        pts = [item for sublist in quadrantSplit for item in sublist]
-    elif not h_symmetry and castle_loc[0] >= size // 2:
-        # We are on right half so we build the left side first
-        quadrantSplit[0], quadrantSplit[1], quadrantSplit[2], quadrantSplit[3] = quadrantSplit[1], quadrantSplit[2], quadrantSplit[0], quadrantSplit[3]
-        pts = [item for sublist in quadrantSplit for item in sublist]
-    elif not h_symmetry and castle_loc[0] < size // 2:
-        # We are on left half so we build the right side first
-        quadrantSplit[2], quadrantSplit[0] = quadrantSplit[0], quadrantSplit[2]
-        pts = [item for sublist in quadrantSplit for item in sublist]
+    # pprint("hilbert_points is: " + str(points)) # Returned points are wrong
+    # quadrantSplit = util.quadSplit(points)
+    # if h_symmetry and castle_loc[1] >= size // 2:
+    #     # We are on lower half so build top first
+    #     pts = [item for sublist in quadrantSplit for item in sublist]
+    # elif h_symmetry and castle_loc[1] < size // 2: 
+    #     # We are on top half so build the bottom first
+    #     quadrantSplit[2], quadrantSplit[0] = quadrantSplit[0], quadrantSplit[2]
+    #     quadrantSplit[3], quadrantSplit[1] = quadrantSplit[1], quadrantSplit[3]
+    #     pts = [item for sublist in quadrantSplit for item in sublist]
+    # elif not h_symmetry and castle_loc[0] >= size // 2:
+    #     # We are on right half so we build the left side first
+    #     quadrantSplit[0], quadrantSplit[1], quadrantSplit[2], quadrantSplit[3] = quadrantSplit[1], quadrantSplit[2], quadrantSplit[0], quadrantSplit[3]
+    #     pts = [item for sublist in quadrantSplit for item in sublist]
+    # elif not h_symmetry and castle_loc[0] < size // 2:
+    #     # We are on left half so we build the right side first
+    #     quadrantSplit[2], quadrantSplit[0] = quadrantSplit[0], quadrantSplit[2]
+    #     pts = [item for sublist in quadrantSplit for item in sublist]
 
     pos_arr = []
-    for pt in pts:
+    for pt in points:
         pos_arr.append((castle_loc[0] + pt[0], castle_loc[1] + pt[1]))
+
+    # pprint("Potential Spots: " + str(pos_arr))
 
     defense_pos = pos
     for pos in pos_arr:
@@ -86,6 +97,7 @@ def hilbert_defense(loc, castle_loc, h_symmetry, visible_map, full_map, fuel_map
         if visible_map[pos[1]][pos[0]] > 0:
             continue
 
+
         defense_pos = pos
         break
 
@@ -93,8 +105,119 @@ def hilbert_defense(loc, castle_loc, h_symmetry, visible_map, full_map, fuel_map
     return defense_pos
 
 
-
-
-
-def gosper_defense():
+def encircle(cur_loc, attack_loc, r2, visible_map, pass_map):
+    # Used to trap a castle in one spot so that it can not grow
+    # If dist >= 150, continue towards the attack_loc
+    # Otherwise using our vision, expand the shape
+    # Potentially layer-up, returns a pair of destination and string representing action
+    # (destination, Action)
+    # Actions include 
+    #"Follow": Follow the edge or stay behind current layer,
+    #"Expand": continue forward toward our goal,
+    #"Stop": Hold current position
     pass
+
+
+def BFSlattice(pprint,castle_loc,full_map,fuel_map,karbonite_map,vis_map):
+    moves = [(1,0),(-1,0),(0,1),(0,-1),(1,1),(-1,-1),(1,-1),(-1,1)]
+    start_time = time.time()
+
+    size = len(full_map)
+    settled = []
+    visited = []
+    frontier = []
+    expanded_nodes = []
+    for i in range(size):
+        row = []
+        vrow = []
+        vrow1 = []
+        for k in range(size):
+            row.append(0)
+            vrow1.append(0)
+            vrow.append(0)
+        visited.append(vrow)
+        settled.append(row)
+        expanded_nodes.append(vrow1)
+
+    start_node = util.Node(None, castle_loc[0], castle_loc[1])
+
+    frontier.append(start_node)
+
+    visited[start_node.y][start_node.x] = start_node
+    j = -1
+    current_node = None
+
+    expanded_nodes[castle_loc[1]][castle_loc[0]] = 1
+
+    while frontier and (time.time() - start_time)*1000 <= 18:
+        j += 1
+
+        current_node = frontier[0]
+        current_index = 0
+
+        for index, n in enumerate(frontier):
+            if n.f < current_node.f:
+                current_index = index 
+                current_node = n
+
+        frontier.pop(current_index)
+        settled[current_node.y][current_node.x] = 1
+
+        if full_map[current_node.y][current_node.x]:
+            # pprint(karbonite_map[current_node.y][current_node.x])
+            if not fuel_map[current_node.y][current_node.x] and not karbonite_map[current_node.y][current_node.x]:
+                if vis_map[current_node.y][current_node.x] < 1:
+                    if (current_node.x + current_node.y) % 2 != 0:
+                        # path = []
+                        # current = current_node
+                        # while current != None:
+                        #     path.insert(0,current)
+                        #     current = current.parent
+                        # return path
+                        return current_node
+
+        children = []
+        for move in moves:
+            newx = current_node.x + move[0]
+            newy = current_node.y + move[1]
+
+            if newx >= size or newy >= size or newx < 0 or newy < 0:
+                continue
+
+            # pprint("Pot New Nodes: " + str((newx,newy)))
+
+            if expanded_nodes[newy][newx] == 1:
+                continue
+
+            if full_map[newy][newx] == False:
+                continue
+
+            if vis_map[newy][newx] > 0:
+                continue
+
+            if fuel_map[newy][newx] or karbonite_map[newy][newx]:
+                continue
+
+            new_node = util.Node(current_node,newx,newy)
+            children.append(new_node)
+
+        for child in children:
+
+            if settled[child.y][child.x]:
+                continue
+
+            child.g = 1
+            child.h = 0
+            child.f = child.g + child.h
+
+            frontier.append(child)
+            expanded_nodes[child.y][child.x] = 1
+    
+
+def lattice(pprint, pos, protect_loc, pass_map, visible_map, fuel_map, karbonite_map):
+    # Defensive lattice
+    # 
+    path = BFSlattice(pprint,protect_loc,pass_map,fuel_map,karbonite_map,visible_map)
+
+    return (path.x, path.y)
+    # return (0,0)

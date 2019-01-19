@@ -3,6 +3,7 @@ import battlecode as bc
 import random
 import nav
 import util
+import defense
 # import time
 # import copy
 
@@ -32,6 +33,8 @@ class MyRobot(BCAbstractRobot):
     defense_fields = {'parent' : None, 'level': 1, 'state': 'FOLLOW', 'branch': 0, 'branch_type': 'active', 'length': util.crossLength()}
     defending = False
     moved=0
+    castle_loc = (0,0)
+    blocked_spots = {}
 
     pilgrims_built=0
     closest_resources=[]
@@ -86,8 +89,9 @@ class MyRobot(BCAbstractRobot):
 
             # get attackable robots
             attackable = []
-            castle_loc = (-1,-1)
             in_vision = []
+            type_seen = 0
+            
 
             for r in visible:
                 # x = 5
@@ -96,7 +100,21 @@ class MyRobot(BCAbstractRobot):
                     continue
                 # now all in vision range, can see x, y etc
                 if r['unit'] == SPECS['CASTLE'] and self.me['team'] == r['team']:
-                    castle_loc = (r['x'],r['y'])
+                    self.castle_loc = (r['x'],r['y'])
+
+                if self.me['turn'] == 1:
+                    if r['unit'] == SPECS['PROPHET']:
+                        type_seen += 1
+
+
+                # if self.destination:
+                #     # self.log("Our destination is: " + str(self.destination) + " and bot is at: " + str((r['x'],r['y'])))
+                #     if self.destination[0] == r['x'] and self.destination[1] == r['y']:
+                #         self.destination = defense.hilbert_defense(self.log, my_coord, self.castle_loc, nav.symmetric(fuel_map), self.get_visible_robot_map(), full_map, fuel_map, karbonite_map, SPECS['PROPHET'], self.me['team'], SPECS)
+                    
+
+                        # self.log("Adding bot to blocked")
+                        # self.blocked_spots[self.destination] = 1
 
                 # if not self.destination is None:
                 #     # self.log("BOOM CHICKA BOW WOW")
@@ -135,17 +153,30 @@ class MyRobot(BCAbstractRobot):
             if not self.destination:
                 self.log("trying to move")
                 # self.log(str(castle_loc == (-1,-1)))
-                if castle_loc == (-1,-1):
+                if self.castle_loc == (-1,-1):
                     self.destination = nav.defense(full_map, self.get_visible_robot_map(), my_coord)
+                # elif type_seen < 16: # Change to be defualt until 4 preachers detected?
+                #     self.log("Found Castle")
+                #     # self.destination = nav.defense(self.get_passable_map(), self.get_visible_robot_map(), my_coord)
+                #     # self.destination, self.defense_fields = nav.defense_2(self.log, self.get_passable_map(), castle_loc, in_vision, self.defense_fields) 
+                #     self.destination = defense.hilbert_defense(self.log, my_coord, self.castle_loc, nav.symmetric(fuel_map), self.get_visible_robot_map(), full_map, fuel_map, karbonite_map, SPECS['PROPHET'], self.me['team'], SPECS, type_seen)
+                #     self.log("Castle Loc is: " + str(self.castle_loc) + " and my destination is: " + str(self.destination))
                 else:
-                    self.log("Found Castle")
-                    # self.destination = nav.defense(self.get_passable_map(), self.get_visible_robot_map(), my_coord)
-                    # self.destination, self.defense_fields = nav.defense_2(self.log, self.get_passable_map(), castle_loc, in_vision, self.defense_fields) 
-                    self.destination = hilbert_defense(my_coord, castle_loc, nav.symmetric(fuel_map), self.get_visible_robot_map(), full_map, fuel_map, karbonite_map, SPECS['PROPHET'], self.me['team'], SPECS)
+                    self.log("DA BUBBLE")
+                    self.destination = defense.lattice(self.log, my_coord, self.castle_loc, full_map, fuel_map, karbonite_map, self.get_visible_robot_map())
+
+            # self.log("DESTINATION is blocked: " + str(self.destination in self.blocked_spots) + " at " + str(self.destination))
+
+            # if self.destination in self.blocked_spots:
+            #     self.destination = defense.hilbert_defense(self.log, my_coord, self.castle_loc, nav.symmetric(fuel_map), self.get_visible_robot_map(), full_map, fuel_map, karbonite_map, SPECS['PROPHET'], self.me['team'], SPECS, self.blocked_spots)
+            #     self.log("Castle Loc is: " + str(self.castle_loc) + " and my new destination is: " + str(self.destination))
+                # self.blocked_spots = {}
+
 
             if my_coord[0]==self.destination[0] and my_coord[1]==self.destination[1]:
                 self.log("CURRENTLY STANDING AT "+my_coord)
                 self.log("DEFENDING MY DESTINATION AT "+self.destination)
+                self.blocked_spots = {}
                 self.defending = True
                 return
 
@@ -267,8 +298,6 @@ class MyRobot(BCAbstractRobot):
                     self.log("Recieving Signal: " + str(r.signal))
                     signal = r.signal
                 # x = 5
-                if : 
-                    self.closest_dropoff = ()
                 if not self.is_visible(r):
                     # this robot isn't actually in our vision range, it just turned up because we heard its radio broadcast. disregard.
                     continue
@@ -442,12 +471,13 @@ class MyRobot(BCAbstractRobot):
                 self.log("Building a Prophet")
                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                 return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
-            if self.me['turn']<10:
-                self.log("Building a Prophet")
-                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-                return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
+            # if self.me['turn']<10:
+            #     self.log("Building a Prophet")
+            #     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+            #     return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
 
-            if self.pilgrims_built<len(self.resources_sphere) and self.me['turn']<50 and self.me['turn']%3==0:
+
+            if self.pilgrims_built<len(self.resources_sphere) and self.me['turn']<50 and self.me['turn'] % 2 == 0:
                 targetX, targetY = self.resources_sphere[self.pilgrims_built]
                 targetX = str(targetX); targetY = str(targetY)
                 if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL']+2 and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
@@ -475,11 +505,11 @@ class MyRobot(BCAbstractRobot):
             #             self.log('Building a Crusader')
             #             goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
             #             return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
-            # if self.me['turn']<150:
-            #     if self.me['turn']%3==0:
-            #         self.log('Building a Crusader')
-            #         goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-            #         return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
+            if self.me['turn']<450:
+                if self.me['turn']%3==0:
+                    self.log('Building a Prophet')
+                    goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                    return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
             # elif self.me['turn'] < 30:
 
 
@@ -545,7 +575,7 @@ class MyRobot(BCAbstractRobot):
             self.log('Happy Thanksgiving!')
             my_loc = (self.me['x'], self.me['y'])
             moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
-            self.log("Progress: " + str(self.progress))
+            # self.log("Progress: " + str(self.progress))
 
             #getting first turn target from castle
             if self.me['turn'] == 1:
@@ -570,7 +600,7 @@ class MyRobot(BCAbstractRobot):
 
                 # self.wave[y][x] = 2
                 self.target=(x,y)
-                self.progress = util.euclidianDistance(self.target,my_loc)
+                # self.progress = util.euclidianDistance(self.target,my_loc)
                 # self.log("The target is: " + str((self.targetX,self.targetY)))
 
                 # moves = [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]
@@ -620,7 +650,7 @@ class MyRobot(BCAbstractRobot):
 
                 if my_loc[0]==self.target[0] and my_loc[1]==self.target[1]:
                     self.log('Mining')
-                    self.progress = 1e10
+                    # self.progress = 1e10
                     return self.mine()
                 #so the bot isnt at the target so it must be moving, either dropping off or going to build a church to dropoff
                 if nav.distance(self.target,my_loc) < 100:
@@ -658,8 +688,8 @@ class MyRobot(BCAbstractRobot):
                 self.log("Moving!")
                 path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, (self.target), moves)
                 # self.log("Path: " + str(path))
-                if self.progress > util.euclidianDistance(my_loc, self.target):
-                        self.progress = util.euclidianDistance(my_loc, self.target)
+                # if self.progress > util.euclidianDistance(my_loc, self.target):
+                        # self.progress = util.euclidianDistance(my_loc, self.target)
                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                 self.log("Action: " + str(action[0]) + ", " + str(action[1]))
                 self.log(action)
@@ -672,14 +702,14 @@ class MyRobot(BCAbstractRobot):
                     self.log('what is going on')
                     #so the bot can drop off so it should and keep going with its life
                     self.dropping_off=False
-                    self.progress = 1e10
+                    # self.progress = 1e10
                     return self.give(botv['x'] - self.me['x'],botv['y'] - self.me['y'], self.me['karbonite'], self.me['fuel'])
                 # #sadly he cannot dropoff
                 elif self.dropping_off==True and self.should_build_church==False:
                     self.closest_dropoff=nav.get_closest_dropoff(self,self.get_visible_robots(),self.homePath)
                     self.log('back to moving 2')
-                    if self.progress > util.euclidianDistance(my_loc, self.closest_dropoff):
-                        self.progress = util.euclidianDistance(my_loc, self.closest_dropoff)
+                    # if self.progress > util.euclidianDistance(my_loc, self.closest_dropoff):
+                    #     self.progress = util.euclidianDistance(my_loc, self.closest_dropoff)
                     path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
                     action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                     return self.move(*action)
@@ -709,8 +739,8 @@ class MyRobot(BCAbstractRobot):
                 #so no matter what, even if were not building a church, we want to move to the dropoff site
                 self.dropping_off=True
                 self.log('back to moving')
-                if self.progress > util.euclidianDistance(my_loc, self.closest_dropoff):
-                        self.progress = util.euclidianDistance(my_loc, self.closest_dropoff)
+                # if self.progress > util.euclidianDistance(my_loc, self.closest_dropoff):
+                #         self.progress = util.euclidianDistance(my_loc, self.closest_dropoff)
                 path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), (my_loc), self.closest_dropoff, moves)
                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                 return self.move(*action)

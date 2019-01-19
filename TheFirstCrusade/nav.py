@@ -273,8 +273,8 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
         settled.append(row)
         expanded_nodes.append(vrow1)
 
-    start_node = util.Node(None,*start)
-    end_node = util.Node(None,*goal)
+    start_node = util.Node(None, start[0], start[1])
+    end_node = util.Node(None, goal[0], goal[1])
 
     # for v in vis:
     #     settled[v['y']][v['x']] = 1
@@ -288,11 +288,12 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
     # expanded_nodes = [start]
     expanded_nodes[start[1]][start[0]] = 1
 
-    while frontier != []:
+    while len(frontier) > 0:
         j += 1
         # print(current_node == frontier[0])
         # pprint("Iteration: " + str(j) + " Nodes expanded: " + str(expanded))
         # pprint("Nodes: " + str(expanded_nodes))
+        # pprint("Frontier: " + str(frontier))
 
         current_node = frontier[0]
         current_index = 0
@@ -302,13 +303,20 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
                 current_index = index 
                 current_node = n
 
+        # if current_node == None:
+        #     pprint("We get a null pointer")
+        #     pprint(str(frontier))
+        #     return [start_node,start_node]
+
         frontier.pop(current_index)
         settled[current_node.y][current_node.x] = 1
+        # pprint(current_node)
 
         # pprint(j,current_node.x,current_node.y,current_node.f)
 
-        if util.nodeHash(current_node.x,current_node.y) == util.nodeHash(end_node.x,end_node.y) or (time.time() - start_time)*1000 > 20:
-            # pprint("COMPLETE")
+        if util.nodeHash(current_node.x,current_node.y) == util.nodeHash(end_node.x,end_node.y) or (time.time() - start_time)*1000 > 18:
+        # if (time.time() - start_time)*1000 > 18:
+            # pprint("COMPLETE: "+ str((current_node)))
             path = []
             current = current_node
             while current != None:
@@ -342,7 +350,8 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
             if full_map[newy][newx] == False:
                 continue
 
-            new_node = util.Node(current_node,newx,newy)
+            new_node = util.Node(current_node, newx, newy)
+            # pprint("Nodes: " + str((newx,newy)))
             children.append(new_node)
 
 

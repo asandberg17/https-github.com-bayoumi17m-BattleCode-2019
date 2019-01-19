@@ -207,6 +207,30 @@ def crossLength():
 def crossAngle(branch):
     return math.pi*branch / 2
 
+def dec2bin(n):
+    if n < 0:
+        return 'Must be a positive integer'
+    elif n == 0:
+        return '0'
+    else:
+        return dec2bin(n//2) + str(n%2)
+
+
+def dec2Bin(num,width):
+    binRepr = dec2bin(num)
+    while len(binRepr) < width:
+        binRepr = "0" + binRepr
+    if len(binRepr) > width:
+        binRepr = binRepr[len(binRepr) - width:]
+    return binRepr
+
+def bin2dec(binary):
+    decimal = 0 
+    for digit in binary: 
+        decimal = decimal*2 + int(digit) 
+
+    return decimal
+
 
 
     
