@@ -309,7 +309,7 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
         #     return [start_node,start_node]
 
         frontier.pop(current_index)
-        settled[current_node.y][current_node.x] = 1
+        # settled[current_node.y][current_node.x] = 1
         # pprint(current_node)
 
         # pprint(j,current_node.x,current_node.y,current_node.f)
@@ -322,6 +322,7 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
             while current != None:
                 path.insert(0,current)
                 current = current.parent
+            # pprint(str(path))
 
             # pprint("Time: " + str((time.time() - start_time)*1000))
             return path
@@ -357,8 +358,8 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
 
         for child in children:
 
-            if settled[child.y][child.x]:
-                continue
+            # if settled[child.y][child.x]:
+            #     continue
 
             child.g = child.g + 1
             child.h = math.sqrt((child.y - end_node.y)**2 + (child.x - end_node.x)**2)
@@ -399,7 +400,7 @@ def defense(full_map, bot_map, loc):
     return target
 
 def defense_2(pprint, full_map, castle_loc, visible, defense_fields):
-    pprint("Starting!")
+    # pprint("Starting!")
     vis = []
     for i in range(8320):
         vis.append(0)
@@ -490,13 +491,19 @@ def defense_2(pprint, full_map, castle_loc, visible, defense_fields):
         # timer = time.time() - start
 
     defense_pos = pos
-    pprint("Final Pos: " + defense_pos)
+    # pprint("Final Pos: " + defense_pos)
     return defense_pos, defense_fields
 
 
 def get_closest_resources(pprint,loc,full_map,fuel_map,karbonite_map):
     closest_resources=[]
     closest_resources_large=[]
+
+    all_resources = []
+    for i in range(len(fuel_map)):
+        for k in range(len(fuel_map)):
+            if fuel_map[i][k] or karbonite_map[i][k]:
+                all_resources.append((k,i))
 
     #ill get the closest resources in a radius of 25, then ill go through that list and make all the resources in a radius of two,
     #then each castle or church should send pilgrims to any in their radius two circle then send three more out to the next two elements
@@ -540,6 +547,7 @@ def get_closest_resources(pprint,loc,full_map,fuel_map,karbonite_map):
     #now have order both lists by distance
     util.insertionSortLoc(pprint, closest_resources, loc)
     util.insertionSortLoc(pprint, closest_resources_large, loc)
+    util.insertionSortLoc(pprint, all_resources, loc)
     # quickSort(closest_resources,closest_resources[0],closest_resources[len(closest_resources)+1],loc)
     # quickSort(closest_resources_large,closest_resources_large[0],closest_resources_large[len(closest_resources_large)+1],loc)
     if len(closest_resources)<len(closest_resources_large):
@@ -600,14 +608,14 @@ def church_or_no(me,loc,map,visible,karb,fuel):
         dist=distance(bot_loc,loc)
         # pprint('i am this far away'+dist +'from a bot that is at'+bot_loc)
         # pprint('and i am at '+loc)
-        if r['team'] == me.me['team'] and (r['unit']=='1' or r['unit']=='0') and dist<3:
+        if r['team'] == me.me['team'] and (r['unit']=='1' or r['unit']=='0') and dist<5:
             churches.append(r)
 
     # pprint(str(churches))
     # total_karbonite=karbonite+my_karbonite
     # total_fuel=fuel+my_fuel
 
-    return len(churches)==0 and karb>=50 and fuel>=200
+    return len(churches)==0 #and karb>=50 and fuel>=200
 #returns a boolean on whether or not a church needs to be built
 #when were standing on the location to build a church we need to check once more that it is still necessary and that another robot
 #hasnt built one before
@@ -633,7 +641,7 @@ def church_build_site(me,SPECS,pprint,loc,full_map,fuel_map,karbonite_map,robot_
     for i in range(len(resources)):
         x_cent=x_cent+resources[i][0]
         y_cent=y_cent+resources[i][1]
-    pprint('the number of resources found was '+len(resources) +'i am at '+loc)
+    # pprint('the number of resources found was '+len(resources) +'i am at '+loc)
     x_cent=int(x_cent/len(resources))
     y_cent=int(y_cent/len(resources))
     site=(x_cent,y_cent)
@@ -755,7 +763,7 @@ def aiming(check_vis, pprint, loc, visible, team, attackmin, attackmax):
                     # pprint("Modifying Map")
                     attack_map[hit[1]][hit[0]] = attack_map[hit[1]][hit[0]] + rel_pos_bot[(hit[0] - centroid[0], hit[1] - centroid[1])]
 
-    pprint(str(visible))
+    # pprint(str(visible))
     max_point = (0,0)
     hits = attack_map[centroid[1]][centroid[0]]
     for y in range(-attkmax,attkmax+1):
@@ -767,7 +775,7 @@ def aiming(check_vis, pprint, loc, visible, team, attackmin, attackmax):
                 max_point = (x, y)
                 hits = attack_map[y + centroid[1]][x + centroid[0]]
 
-    pprint(str(attack_map))
+    # pprint(str(attack_map))
 
     return max_point
 
