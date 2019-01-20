@@ -105,8 +105,9 @@ class MyRobot(BCAbstractRobot):
                     # this robot isn't actually in our vision range, it just turned up because we heard its radio broadcast. disregard.
                     continue
                 # now all in vision range, can see x, y etc
-                if r['unit'] == SPECS['CASTLE'] and self.me['team'] == r['team']:
-                    self.castle_loc = (r['x'],r['y'])
+                if r['unit'] == SPECS['CASTLE'] or r['unit'] == SPECS['CHURCH']:
+                    if self.me['team'] == r['team']:
+                        self.castle_loc = (r['x'],r['y'])
 
                 if self.me['turn'] == 1:
                     if r['unit'] == SPECS['PROPHET']:
@@ -507,9 +508,9 @@ class MyRobot(BCAbstractRobot):
                                 self.filled_resources[self.global_resources[bot['castle_talk']]] = 1
 
                         i = 0
-                        # while signal in self.filled_resources:
-                        #     signal = self.local_resources[self.pilgrims_built + i]
-                        #     i = i + 1
+                        while signal in self.filled_resources:
+                            signal = self.local_resources[self.pilgrims_built + i]
+                            i = i + 1
 
                         self.signal(util.nodeHash(*signal) + 57471, 4)
 
@@ -555,8 +556,10 @@ class MyRobot(BCAbstractRobot):
                 return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
 
 
-            if self.pilgrims_built<len(self.resources_sphere) and self.me['turn']<25:# and self.me['turn'] % 2 == 0:
-                if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL']+2 and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
+            if self.me['turn']<50: # and self.me['turn'] % 2 == 0:
+                # targetX, targetY = self.resources_sphere[self.pilgrims_built]
+                # targetX = str(targetX); targetY = str(targetY)
+                if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL']+202 and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
 
                     self.log("Sending to target: (" + targetX + ", " + targetY + ")")
                     # self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
@@ -566,9 +569,9 @@ class MyRobot(BCAbstractRobot):
                             self.filled_resources[self.global_resources[bot['castle_talk']]] = 1
 
                     i = 0
-                    # while signal in self.filled_resources:
-                    #     signal = self.local_resources[self.pilgrims_built + i]
-                    #     i = i + 1
+                    while signal in self.filled_resources:
+                        signal = self.local_resources[self.pilgrims_built + i]
+                        i = i + 1
 
                     self.signal(util.nodeHash(*signal) + 57471, 4)
 
@@ -859,20 +862,24 @@ class MyRobot(BCAbstractRobot):
 
 
 
-        # elif self.me['unit']==SPECS['CHURCH']:
-        #     my_loc=self.me['x'],self.me['y']
-        #     if self.me['turn']<100:
-        #         robot_map=self.get_visible_robot_map()
-        #         self.resources_sphere=nav.get_closest_resources_church(self.log,my_loc,robot_map,self.get_passable_map(),self.get_fuel_map(),self.get_karbonite_map())
-        #         self.log('length of resources sphere is '+len(self.resources_sphere))
-        #         if self.pilgrims_built<len(self.resources_sphere):
-        #             targetX, targetY = self.resources_sphere[self.pilgrims_built]
-        #             targetX = str(targetX); targetY = str(targetY)
-        #             self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
-        #             self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-        #             goal_dir=nav.spawn(my_loc, self.map, self.get_visible_robot_map())
-        #             self.pilgrims_built=self.pilgrims_built+1
-        #             return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+        elif self.me['unit']==SPECS['CHURCH']:
+            my_loc=self.me['x'],self.me['y']
+            if self.me['turn']%3==0:
+                self.log('Building a Prophet')
+                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
+            # if self.me['turn']<100:
+                # robot_map=self.get_visible_robot_map()
+                # self.resources_sphere=nav.get_closest_resources_church(self.log,my_loc,robot_map,self.get_passable_map(),self.get_fuel_map(),self.get_karbonite_map())
+                # self.log('length of resources sphere is '+len(self.resources_sphere))
+                # if self.pilgrims_built<len(self.resources_sphere):
+                #     targetX, targetY = self.resources_sphere[self.pilgrims_built]
+                #     targetX = str(targetX); targetY = str(targetY)
+                #     self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
+                #     self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                #     goal_dir=nav.spawn(my_loc, self.map, self.get_visible_robot_map())
+                #     self.pilgrims_built=self.pilgrims_built+1
+                #     return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
           
 
 
