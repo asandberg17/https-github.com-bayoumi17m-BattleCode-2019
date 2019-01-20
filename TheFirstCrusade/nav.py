@@ -650,16 +650,19 @@ def church_build_site(me,SPECS,pprint,loc,full_map,fuel_map,karbonite_map,robot_
     site_final=site
     x=temp[0]
     y=temp[1]
-    if not fuel_map[y][x] and not karbonite_map[y][x]:
+    if not fuel_map[y][x] and not karbonite_map[y][x] and full_map[y][x]:
         num=number_adjacent_resources(pprint,site,full_map,fuel_map,karbonite_map)
     else:
         num=0
+    if robot_map[y][x]>0:
+        if me.get_robot(robot_map[y][x])['unit']==SPECS['CHURCH'] or me.get_robot(robot_map[y][x])['unit']==SPECS['CASTLE'] or me.get_robot(robot_map[y][x])['unit']==SPECS['PROPHET']:
+            num=0
     for i in range(0,len(dirs)):
         temp=apply_dir(site,dirs[i])
         x=temp[0]
         y=temp[1]
         if robot_map[y][x]>0:
-            if me.get_robot(robot_map[y][x])['unit']==SPECS['CHURCH'] or me.get_robot(robot_map[y][x])['unit']==SPECS['CASTLE']:
+            if me.get_robot(robot_map[y][x])['unit']==SPECS['CHURCH'] or me.get_robot(robot_map[y][x])['unit']==SPECS['CASTLE'] or me.get_robot(robot_map[y][x])['unit']==SPECS['PROPHET']:
                 continue
         # pprint('testing '+temp)
         # pprint('fuel '+fuel_map[y][x])
@@ -890,6 +893,49 @@ def get_closest_resources_pilgrim(pprint,loc,robot_map,full_map,fuel_map,karboni
     # quickSort(closest_resources_large,closest_resources_large[0],closest_resources_large[len(closest_resources_large)+1],loc)
 
     return closest_resources_large
+
+
+# def lone_pilgrim():
+# #return True if there is a lone pilgrim, ie a pilgrim not standing on a resource that is about to move out of range of the castle
+# #getting number of close resources
+#     start_x=site[0]-3
+#     num_resources=0
+#     if start_x<0:
+#         start_x=0
+#     start_y=site[1]-3
+#     if start_y<0:
+#         start_y=0
+#     end_x=site[0]+4
+#     if end_x>len(full_map):
+#         end_x=len(full_map)
+#     end_y=site[1]+4
+#     if end_y>len(full_map):
+#         end_y=len(full_map)
+#     # pprint('start x '+start_x)
+#     for x in range(start_x,end_x):
+#         for y in range(start_y,end_y):
+#             # pprint('resources at '+x+','+y)
+#             if fuel_map[y][x] or karbonite_map[y][x]:
+#                 num_resources=num_resources+1
+
+#     #now need to get the number of nearby pilgrims
+#     num_pilgrims=0
+#     for r in visible:
+#         if r['unit']==SPECS['PILGRIM']:
+#             num_pilgrims=num_pilgrims+1
+#     #figure out if there is more pilgrims that nearby resource tiles
+#     if num_pilgrims>num_resources:
+#         return True
+#     return False
+
+# def target_pilgrim():
+#     #returns the lone pilgrim id that the crusader will track
+#     for r in visible:
+#         if r['unit']==SPECS['PILGRIM']:
+#             x=r['x']
+#             y=r['y']
+#             if not karbonite_map[y][x] or not fuel_map[y][x]:
+
 
 
 
