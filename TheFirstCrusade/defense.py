@@ -8,7 +8,7 @@ import hilbert
 def hilbert_points(pprint,p):
     N = 2 # Number of Dimensions
 
-    pprint("P is: " + p)
+    # pprint("P is: " + p)
 
     spacing = 2
 
@@ -149,11 +149,13 @@ def BFSlattice(pprint,castle_loc,full_map,fuel_map,karbonite_map,vis_map):
 
     expanded_nodes[castle_loc[1]][castle_loc[0]] = 1
 
-    while frontier and (time.time() - start_time)*1000 <= 18:
+    while frontier: # and (time.time() - start_time)*1000 <= 18
         j += 1
 
         current_node = frontier[0]
         current_index = 0
+
+        pprint("Node:" + str(current_node))
 
         for index, n in enumerate(frontier):
             if n.f < current_node.f:
@@ -162,6 +164,11 @@ def BFSlattice(pprint,castle_loc,full_map,fuel_map,karbonite_map,vis_map):
 
         frontier.pop(current_index)
         settled[current_node.y][current_node.x] = 1
+
+        if current_node is None or current_node.x is None or current_node.y is None:
+            pprint("Something is null")
+            pprint(str(current_node))
+            return util.Node(None,0,0)
 
         if full_map[current_node.y][current_node.x]:
             # pprint(karbonite_map[current_node.y][current_node.x])
@@ -175,6 +182,7 @@ def BFSlattice(pprint,castle_loc,full_map,fuel_map,karbonite_map,vis_map):
                         #     current = current.parent
                         # return path
                         return current_node
+                        # return util.Node(None,0,0)
 
         children = []
         for move in moves:
@@ -199,12 +207,15 @@ def BFSlattice(pprint,castle_loc,full_map,fuel_map,karbonite_map,vis_map):
                 continue
 
             new_node = util.Node(current_node,newx,newy)
+            if new_node is None or newx is None or newy is None:
+                pprint("Removing null node")
+                continue
             children.append(new_node)
 
         for child in children:
 
-            if settled[child.y][child.x]:
-                continue
+            # if settled[child.y][child.x]:
+            #     continue
 
             child.g = 1
             child.h = 0
