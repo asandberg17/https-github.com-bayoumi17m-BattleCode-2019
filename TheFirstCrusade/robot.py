@@ -482,7 +482,7 @@ class MyRobot(BCAbstractRobot):
                         signal = self.local_resources[self.pilgrims_built]
                         for bot in self.get_visible_robots():
                             if bot['castle_talk'] > 0 and bot['castle_talk'] < 192:
-                                self.filled_resources[self.global_resources[bot['castle_talk']]] = 1
+                                self.filled_resources[self.global_resources[bot['castle_talk'] - 1]] = 1
 
                         i = 0
                         while signal in self.filled_resources:
@@ -505,7 +505,7 @@ class MyRobot(BCAbstractRobot):
                         signal = self.local_resources[self.pilgrims_built]
                         for bot in self.get_visible_robots():
                             if bot['castle_talk'] > 0 and bot['castle_talk'] < 192:
-                                self.filled_resources[self.global_resources[bot['castle_talk']]] = 1
+                                self.filled_resources[self.global_resources[bot['castle_talk'] - 1]] = 1
 
                         i = 0
                         while signal in self.filled_resources:
@@ -566,7 +566,7 @@ class MyRobot(BCAbstractRobot):
                     signal = self.local_resources[self.pilgrims_built]
                     for bot in self.get_visible_robots():
                         if bot['castle_talk'] > 0 and bot['castle_talk'] < 192:
-                            self.filled_resources[self.global_resources[bot['castle_talk']]] = 1
+                            self.filled_resources[self.global_resources[bot['castle_talk'] - 1]] = 1
 
                     i = 0
                     while signal in self.filled_resources:
@@ -597,11 +597,11 @@ class MyRobot(BCAbstractRobot):
             #             self.log('Building a Crusader')
             #             goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
             #             return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
-            # if self.me['turn']<450:
-            #     if self.me['turn']%3==0:
-            #         self.log('Building a Prophet')
-            #         goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-            #         return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
+            if self.me['turn']<850:
+                if self.me['turn']%3==0:
+                    self.log('Building a Prophet')
+                    goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                    return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
             # elif self.me['turn'] < 30:
 
 
