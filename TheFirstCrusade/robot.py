@@ -602,6 +602,12 @@ class MyRobot(BCAbstractRobot):
                     self.log('Building a Prophet')
                     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                     return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
+
+            # if self.me['turn']>850:
+            #     if self.me['turn']%3==0:
+            #         self.log('Building a Crusader')
+            #         goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+            #         return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
             # elif self.me['turn'] < 30:
 
 
@@ -863,10 +869,11 @@ class MyRobot(BCAbstractRobot):
 
 
         elif self.me['unit']==SPECS['CHURCH']:
+            my_coord = (self.me['x'], self.me['y'])
             my_loc=self.me['x'],self.me['y']
             if self.me['turn']%3==0:
                 self.log('Building a Prophet')
-                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
                 return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
             # if self.me['turn']<100:
                 # robot_map=self.get_visible_robot_map()
