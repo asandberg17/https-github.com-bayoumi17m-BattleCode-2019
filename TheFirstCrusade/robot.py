@@ -626,11 +626,55 @@ class MyRobot(BCAbstractRobot):
             #             self.log('Building a Crusader')
             #             goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
             #             return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
-            if self.me['turn']<850:
+            if self.me['turn']<75:
                 if self.me['turn']%3==0:
                     self.log('Building a Prophet')
                     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                     return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
+            if self.me['turn']>100:
+                if self.me['turn']<145:
+                    self.log('Building a Crusader')
+                    goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                    return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
+
+                # if self.me['turn']<180: # and self.me['turn'] % 2 == 0:
+                #     # targetX, targetY = self.resources_sphere[self.pilgrims_built]
+                #     # targetX = str(targetX); targetY = str(targetY)
+                #     if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL']+202 and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
+
+                #         self.log("Sending to target: (" + targetX + ", " + targetY + ")")
+                #         # self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
+                #         signal = self.local_resources[self.pilgrims_built]
+                #         for bot in self.get_visible_robots():
+                #             if bot['castle_talk'] > 0 and bot['castle_talk'] < 192:
+                #                 self.filled_resources[self.global_resources[bot['castle_talk'] - 1]] = 1
+
+                #         i = 0
+                #         while signal in self.filled_resources:
+                #             signal = self.local_resources[self.pilgrims_built + i]
+                #             i = i + 1
+
+                #         self.signal(util.nodeHash(*signal) + 57471, 4)
+
+                #         self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                #         goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                #         self.pilgrims_built=self.pilgrims_built+1
+                #         symmetric=nav.symmetric(self.get_passable_map())
+                #         self.log('this is a horizontal map:'+symmetric)
+                #         if symmetric:
+                #             x=signal[1]
+                #         else:
+                #             x=signal[0]
+                #         if x>=len(self.get_passable_map())/2:
+                #             self.build_guard=True
+                #         return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+                    
+
+                if self.me['turn']<1000:
+                    if self.me['turn']%3==0:
+                        self.log('Building a Prophet')
+                        goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                        return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
 
             # if self.me['turn']>850:
             #     if self.me['turn']%3==0:

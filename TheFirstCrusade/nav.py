@@ -824,7 +824,7 @@ def homies(self,SPECS,loc,visible,team):
             continue
         if r['team']==team and r['unit']==SPECS['CRUSADER']:
             buddies=buddies+1
-    return buddies>4
+    return buddies>6
 
 
 
