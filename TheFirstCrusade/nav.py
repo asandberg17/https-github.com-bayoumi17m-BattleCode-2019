@@ -178,9 +178,11 @@ def sq_dist(p1, p2):
 
 def spawn(loc,full_map,robot_map):
     goal_dir=(-1,0)
-    while not is_passable(full_map, loc, goal_dir, robot_map):
+    counter=0
+    while not is_passable(full_map, loc, goal_dir, robot_map) and counter<9:
         goal_dir = rotate(goal_dir, 1)
-    
+        counter=counter+1
+
     return goal_dir
 
 def symmetric(full_map):
