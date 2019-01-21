@@ -35,6 +35,7 @@ class MyRobot(BCAbstractRobot):
     has_moved=False
     squad=False
     guard=False
+    step=0
     # Make parent the id of the Castle or centroid bot
     defense_fields = {'parent' : None, 'level': 1, 'state': 'FOLLOW', 'branch': 0, 'branch_type': 'active', 'length': util.crossLength()}
     defending = False
@@ -257,9 +258,31 @@ class MyRobot(BCAbstractRobot):
             #     self.destination = nav.reflect(self.map, util.unHash(signal), nav.symmetric(self.map))
 
             self.log("My destination is " + self.destination)
-            if (self.destination[0]-my_coord[0])**2 + (self.destination[1]-my_coord[1])**2 < 10 and self.guard==True:
+            if (self.destination[0]-my_coord[0])**2 + (self.destination[1]-my_coord[1])**2 < 13 and self.guard==True:
                 self.log('defending the pilgrims')
-                return
+                # if self.step<3:
+                #     self.steps=self.steps+1
+                #     self.destination =nav.reflect(self.map, self.homePath, nav.symmetric(self.map))
+                #     path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                #     action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+                #     return self.move(*action)
+                if self.get_karbonite_map()[my_coord[1]][my_coord[0]] or self.get_fuel_map()[my_coord[1]][my_coord[0]]:
+                    loc=my_coord
+                    temp_loc=loc
+                    i=0
+                    dirs=[(0,1),(1,1),(1,0),(1,-1),(0,-1),(-1, -1),(-1, 0),(-1, 1)]
+                    karb_map=self.get_karbonite_map()
+                    fuel_map=self.get_fuel_map()
+                    while karb_map[temp_loc[1]][temp_loc[0]] or fuel_map[temp_loc[1]][temp_loc[0]] and i<9:
+                        temp_loc=nav.apply_dir(loc,dirs[i])
+                        i=i+1
+                    self.destination=temp_loc
+                    path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                    action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+                    return self.move(*action)
+
+                else:
+                    return
             if (self.destination[0]-my_coord[0])**2 + (self.destination[1]-my_coord[1])**2 < 10 and self.guard==False:
                 self.log("Holding my ground")
                 self.destination = self.homePath # Change to next castle
@@ -555,7 +578,7 @@ class MyRobot(BCAbstractRobot):
                 return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
 
 
-            if self.pilgrims_built<len(self.resources_sphere) and self.me['turn']<25:# and self.me['turn'] % 2 == 0:
+            if self.pilgrims_built<len(self.resources_sphere) and self.me['turn']<50:# and self.me['turn'] % 2 == 0:
                 if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL']+2 and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
 
                     self.log("Sending to target: (" + targetX + ", " + targetY + ")")
@@ -575,7 +598,13 @@ class MyRobot(BCAbstractRobot):
                     self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                     self.pilgrims_built=self.pilgrims_built+1
-                    if nav.sq_dist(signal,my_coord)>20:
+                    symmetric=nav.symmetric(self.get_passable_map())
+                    self.log('this is a horizontal map:'+symmetric)
+                    if symmetric:
+                        x=signal[1]
+                    else:
+                        x=signal[0]
+                    if x>=len(self.get_passable_map())/2:
                         self.build_guard=True
                     return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
 
