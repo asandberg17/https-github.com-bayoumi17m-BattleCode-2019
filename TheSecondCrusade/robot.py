@@ -785,6 +785,7 @@ class MyRobot(BCAbstractRobot):
             ###
             # Send prophet attackers or raids? Or..?
             ###
+            
 
             elif self.me['turn'] < 250 and self.me['turn'] > 150 and self.turnPos == 0:
                 if self.circle_proph < len(self.encircle):
