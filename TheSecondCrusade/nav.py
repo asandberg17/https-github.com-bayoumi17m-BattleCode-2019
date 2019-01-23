@@ -245,6 +245,9 @@ def distance(x1,y1):
     return x_dist**2 + y_dist**2
 
 def astar(pprint,check_vis,vis,full_map,start,goal,moves):
+    # pprint(str(goal))
+
+    approx = False
 
     start_time = time.time()
     visible = []
@@ -255,6 +258,9 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
         if not check_vis(v):
             continue
         visible[int(util.nodeHash(v['x'],v['y']))] = 1
+
+    if visible[util.nodeHash(*goal)]:
+        approx = True
 
     # pprint(str(vis))
 
@@ -329,6 +335,17 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
             # pprint("Time: " + str((time.time() - start_time)*1000))
             return path
 
+        if approx and util.euclidianDistance((current_node.x,current_node.y), (end_node.x,end_node.y)) <= 3:
+            path = []
+            current = current_node
+            while current != None:
+                path.insert(0,current)
+                current = current.parent
+            # pprint(str(path))
+
+            # pprint("Time: " + str((time.time() - start_time)*1000))
+            return path
+
         children = []
         for move in moves:
             newx = current_node.x + move[0]
@@ -364,7 +381,7 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
             #     continue
 
             child.g = child.g + 1
-            child.h = math.sqrt((child.y - end_node.y)**2 + (child.x - end_node.x)**2)
+            child.h = (child.y - end_node.y)**2 + (child.x - end_node.x)**2
             child.f = child.g + child.h
 
             open_node = visited[child.y][child.x]
@@ -379,26 +396,35 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
 
 
 
-def defense(full_map, bot_map, loc):
+def defense(full_map, loc):
     spoke=randint(1,4)
     target=loc[0],loc[1]
+    size = len(full_map)
 
     if spoke==1:
         target=target[0],target[1]+3
         while not full_map[target[1]][target[0]]:
             target=target[0],target[1]+1
+            if target[1] >= size:
+                target[1] = size
     if spoke==2:
         target=target[0]+3,target[1]
         while not full_map[target[1]][target[0]]:
             target=target[0]+1,target[1]
+            if target[0] >= size:
+                target[0] = size
     if spoke==3:
         target=target[0],target[1]-3
         while not full_map[target[1]][target[0]]:
             target=target[0],target[1]-1
+            if target[1] < 0:
+                target[1] = 0
     if spoke==4:
         target=target[0]-3,target[1]
         while not full_map[target[1]][target[0]]:
             target=target[0]-1,target[1]
+            if target[0] < 0:
+                target[0] = 0
     return target
 
 def defense_2(pprint, full_map, castle_loc, visible, defense_fields):
@@ -610,14 +636,14 @@ def church_or_no(me,loc,map,visible,karb,fuel):
         dist=distance(bot_loc,loc)
         # pprint('i am this far away'+dist +'from a bot that is at'+bot_loc)
         # pprint('and i am at '+loc)
-        if r['team'] == me.me['team'] and (r['unit']=='1' or r['unit']=='0') and dist<5:
+        if r['team'] == me.me['team'] and (r['unit']=='1' or r['unit']=='0') and dist<10:
             churches.append(r)
 
     # pprint(str(churches))
     # total_karbonite=karbonite+my_karbonite
     # total_fuel=fuel+my_fuel
 
-    return len(churches)==0 #and karb>=50 and fuel>=200
+    return len(churches)==0 and karb>=50 and fuel>=200
 #returns a boolean on whether or not a church needs to be built
 #when were standing on the location to build a church we need to check once more that it is still necessary and that another robot
 #hasnt built one before
@@ -819,12 +845,12 @@ def new_resource_target(self,SPECS,pprint,me,loc,full_map,fuel_map,karbonite_map
     # return closest_resources[0]
 
 
-def homies(self,SPECS,loc,visible,team):
+def homies(self,SPECS,loc,visible,team,unit):
     buddies=0
     for r in visible:
         if not self.is_visible(r):
             continue
-        if r['team']==team and r['unit']==SPECS['CRUSADER']:
+        if r['team']==team and r['unit']==SPECS[unit]:
             buddies=buddies+1
     return buddies>4
 

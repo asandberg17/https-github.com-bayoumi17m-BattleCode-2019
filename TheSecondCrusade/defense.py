@@ -10,7 +10,7 @@ def hilbert_points(pprint,p):
 
     # pprint("P is: " + p)
 
-    spacing = 2
+    spacing = 4
 
     pmax = 2
     side = 2**pmax
@@ -74,38 +74,54 @@ def hilbert_defense(pprint, loc, castle_loc, h_symmetry, visible_map, full_map, 
 
     # pprint("Potential Spots: " + str(pos_arr))
 
-    defense_pos = pos
+    defense_pos = castle_loc
     for pos in pos_arr:
         if pos[0] < 0 or pos[1] < 0 or pos[1] >= size or pos[0] >= size:
             continue
 
-        init_pos = pos
-        i = 0
-        dirs=[(0,1),(1,1),(1,0),(1,-1),(0,-1),(-1, -1),(-1, 0),(-1, 1)]
-        collide_w_resource = False
-        while fuel_map[pos[1]][pos[0]] or karbonite_map[pos[1]][pos[0]] or not full_map[pos[1]][pos[0]]:
-            pos = init_pos
-            if i >= len(dirs):
-                collide_w_resource = True
-                break
-            pos = (pos[0] + dirs[i][0], pos[1] + dirs[i][1])
-            i += 1
+        while not full_map[pos[1]][pos[0]]:
+            if pos[1] < castle_loc[1]:
+                pos[1] += 1 
+                continue
+            if pos[1] > castle_loc[1]:
+                pos[1] -= 1 
+                continue
+            if pos[0] > castle_loc[0]:
+                pos[0] -= 1 
+                continue
+            if pos[0] < castle_loc[0]:
+                pos[0] += 1
+                continue
 
-        if collide_w_resource:
-            continue
+        # init_pos = castle_loc
+        # i = 0
+        # dirs=[(0,1),(1,1),(1,0),(1,-1),(0,-1),(-1, -1),(-1, 0),(-1, 1)]
+        # collide_w_resource = False
+        # while fuel_map[pos[1]][pos[0]] or karbonite_map[pos[1]][pos[0]] or not full_map[pos[1]][pos[0]]:
+        #     pos = init_pos
+        #     if i >= len(dirs):
+        #         collide_w_resource = True
+        #         break
+        #     pos = (pos[0] + dirs[i][0], pos[1] + dirs[i][1])
+        #     i += 1
 
-        if visible_map[pos[1]][pos[0]] > 0:
-            continue
+        # if collide_w_resource:
+        #     continue
+
+        # if visible_map[pos[1]][pos[0]] > 0:
+        #     continue
 
 
         defense_pos = pos
         break
 
+    pprint("defense_pos: " + str(defense_pos))
+
 
     return defense_pos
 
 
-def encircle(cur_loc, attack_loc, r2, visible_map, pass_map):
+def encircle(pprint, attack_loc, r2, tol, full_map):
     # Used to trap a castle in one spot so that it can not grow
     # If dist >= 150, continue towards the attack_loc
     # Otherwise using our vision, expand the shape
@@ -115,12 +131,45 @@ def encircle(cur_loc, attack_loc, r2, visible_map, pass_map):
     #"Follow": Follow the edge or stay behind current layer,
     #"Expand": continue forward toward our goal,
     #"Stop": Hold current position
-    pass
 
+    encirclement = []
+    encirclement_rev = []
+    size = len(full_map)
 
-def BFSlattice(pprint,castle_loc,full_map,fuel_map,karbonite_map,vis_map):
+    for j in range(size):
+        for l in range(size):
+            if (l-attack_loc[0])**2 + (j-attack_loc[1])**2 <= r2+tol and (l-attack_loc[0])**2 + (j-attack_loc[1])**2 >= r2-tol:
+                if full_map[j][l] == True:
+                    encirclement.append((l,j))
+                    encirclement_rev.append((l,j))
+                # pprint("Dist_sq: " + str((l-attack_loc[0])**2 + (j-attack_loc[1])**2) + ", is close: " + str(util.isclose((l-attack_loc[0])**2 + (j-attack_loc[1])**2,r2,rel_tol=0,abs_tol=8)))
+            # pprint("Dist: ")
+            # if util.isclose((l-attack_loc[0])**2 + (j-attack_loc[1])**2, r2,abs_tol=10):
+            #     pprint("Close")
+            #     if full_map[j][l] == True:
+            #         encirclement.append((l,j))
+            #         encirclement_rev.append((l,j))
+
+    # pprint("Len of encirclement: " + str(len(encirclement)))
+
+    return encirclement, encirclement_rev.reverse()
+
+def BFSlattice(pprint, castle_loc, full_map, fuel_map, karbonite_map,vis, check_vis):
     moves = [(1,0),(-1,0),(0,1),(0,-1),(1,1),(-1,-1),(1,-1),(-1,1)]
-    start_time = time.time()
+    # start_time = time.time()
+
+    visible = []
+    for v in range(8320):
+        visible.append(0)
+
+    visible[int(util.nodeHash(*castle_loc))] = 1
+
+    for v in vis:
+        if not check_vis(v):
+            continue
+        visible[int(util.nodeHash(v['x'],v['y']))] = 1
+
+    pprint("Checking (55,4): " + str(visible[1774]))
 
     size = len(full_map)
     settled = []
@@ -149,40 +198,23 @@ def BFSlattice(pprint,castle_loc,full_map,fuel_map,karbonite_map,vis_map):
 
     expanded_nodes[castle_loc[1]][castle_loc[0]] = 1
 
-    while frontier: # and (time.time() - start_time)*1000 <= 18
+    while len(frontier) > 0: # and (time.time() - start_time)*1000 <= 18
         j += 1
 
         current_node = frontier[0]
         current_index = 0
-
+        pprint("Frontier: " + str(frontier))
         pprint("Node:" + str(current_node))
 
-        for index, n in enumerate(frontier):
-            if n.f < current_node.f:
-                current_index = index 
-                current_node = n
 
         frontier.pop(current_index)
         settled[current_node.y][current_node.x] = 1
 
-        if current_node is None or current_node.x is None or current_node.y is None:
-            pprint("Something is null")
-            pprint(str(current_node))
-            return util.Node(None,0,0)
-
         if full_map[current_node.y][current_node.x]:
-            # pprint(karbonite_map[current_node.y][current_node.x])
             if not fuel_map[current_node.y][current_node.x] and not karbonite_map[current_node.y][current_node.x]:
-                if vis_map[current_node.y][current_node.x] < 1:
+                if visible[int(util.nodeHash(current_node.x,current_node.y))] == 0:
                     if (current_node.x + current_node.y) % 2 != 0:
-                        # path = []
-                        # current = current_node
-                        # while current != None:
-                        #     path.insert(0,current)
-                        #     current = current.parent
-                        # return path
                         return current_node
-                        # return util.Node(None,0,0)
 
         children = []
         for move in moves:
@@ -200,16 +232,13 @@ def BFSlattice(pprint,castle_loc,full_map,fuel_map,karbonite_map,vis_map):
             if full_map[newy][newx] == False:
                 continue
 
-            if vis_map[newy][newx] > 0:
+            if visible[int(util.nodeHash(newx,newy))] == 1:
                 continue
 
             if fuel_map[newy][newx] or karbonite_map[newy][newx]:
                 continue
 
             new_node = util.Node(current_node,newx,newy)
-            if new_node is None or newx is None or newy is None:
-                pprint("Removing null node")
-                continue
             children.append(new_node)
 
         for child in children:
@@ -217,18 +246,20 @@ def BFSlattice(pprint,castle_loc,full_map,fuel_map,karbonite_map,vis_map):
             # if settled[child.y][child.x]:
             #     continue
 
-            child.g = 1
-            child.h = 0
-            child.f = child.g + child.h
+            # child.g = 1
+            # child.h = 0
+            # child.f = child.g + child.h
 
             frontier.append(child)
             expanded_nodes[child.y][child.x] = 1
+
+    # return castle_loc
     
 
-def lattice(pprint, pos, protect_loc, pass_map, visible_map, fuel_map, karbonite_map):
+def lattice(pprint, protect_loc, pass_map, fuel_map, karbonite_map, vis, check_vis):
     # Defensive lattice
     # 
-    path = BFSlattice(pprint,protect_loc,pass_map,fuel_map,karbonite_map,visible_map)
+    path = BFSlattice(pprint,protect_loc,pass_map,fuel_map,karbonite_map,vis,check_vis)
 
     return (path.x, path.y)
     # return (0,0)
