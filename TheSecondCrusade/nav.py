@@ -905,46 +905,77 @@ def get_closest_resources_pilgrim(pprint,loc,robot_map,full_map,fuel_map,karboni
     return closest_resources_large
 
 
-# def lone_pilgrim():
-# #return True if there is a lone pilgrim, ie a pilgrim not standing on a resource that is about to move out of range of the castle
-# #getting number of close resources
-#     start_x=site[0]-3
-#     num_resources=0
-#     if start_x<0:
-#         start_x=0
-#     start_y=site[1]-3
-#     if start_y<0:
-#         start_y=0
-#     end_x=site[0]+4
-#     if end_x>len(full_map):
-#         end_x=len(full_map)
-#     end_y=site[1]+4
-#     if end_y>len(full_map):
-#         end_y=len(full_map)
-#     # pprint('start x '+start_x)
-#     for x in range(start_x,end_x):
-#         for y in range(start_y,end_y):
-#             # pprint('resources at '+x+','+y)
-#             if fuel_map[y][x] or karbonite_map[y][x]:
-#                 num_resources=num_resources+1
+def meeting_place(me,loc,target,moves):
+    # #if the map is symmetric(ie its horizontal), then we want the meeting place to be closer to the enemy y axis wise
+    # if symmetric:
+    #     if loc[1]<len(full_map):
+    #         #so the enemies are south of us
+    #         #lets just try moving straight down
+    #         destination=loc[0],loc[1]+6
+    #         passable=full_map[destination[1]][destination[0]]
+    #         resource=karb_map[destination[1]][destination[0]] or fuel_map[destination[1]][destination[0]]
+    #         occupied=visible[destination[1]][destination[0]] 
+    #         if not passable or resource or occupied:
+    #             destination=loc[0]-1,loc[1]
+    #             passable=full_map[destination[1]][destination[0]]
+    #             resource=karb_map[destination[1]][destination[0]] or fuel_map[destination[1]][destination[0]]
+    #             occupied=visible[destination[1]][destination[0]] 
+    #         if not passable or resource or occupied:
+    #             destination=loc[0]+2,loc[1]
+    #             passable=full_map[destination[1]][destination[0]]
+    #             resource=karb_map[destination[1]][destination[0]] or fuel_map[destination[1]][destination[0]]
+    #             occupied=visible[destination[1]][destination[0]] 
+    #         if not passable or resource or occupied:
+    #             destination=loc[0]-1,loc[1]-1
+    #             passable=full_map[destination[1]][destination[0]]
+    #             resource=karb_map[destination[1]][destination[0]] or fuel_map[destination[1]][destination[0]]
+    #             occupied=visible[destination[1]][destination[0]] 
+    #         if not passable or resource or occupied:
+    #             destination=loc[0]+2,loc[1]+2
+    #             passable=full_map[destination[1]][destination[0]]
+    #             resource=karb_map[destination[1]][destination[0]] or fuel_map[destination[1]][destination[0]]
+    #             occupied=visible[destination[1]][destination[0]] 
 
-#     #now need to get the number of nearby pilgrims
-#     num_pilgrims=0
-#     for r in visible:
-#         if r['unit']==SPECS['PILGRIM']:
-#             num_pilgrims=num_pilgrims+1
-#     #figure out if there is more pilgrims that nearby resource tiles
-#     if num_pilgrims>num_resources:
-#         return True
-#     return False
+    #     else:
+    #         #the enemies are north of us
+    #         #lets just try moving straight up
+    #         destination=loc[0],loc[1]-6
+    #     #now if taken or impassable try left or right one, then take a step forward or backwards
+    # else:
+    #     if loc[0]<len(full_map):
+    #         #the enemies must be east of us
+    #         #lets try moving straight right
+    #         destination=loc[0]+6,loc[1]
+    #     else:
+    #         #the enemies must be west of us
+    #         #lets try moving straight left
+    #         destination=loc[0]-6,loc[1]
+    #     #now if taken or impassable try up or down one, then take a step left or right
+    # return destination
 
-# def target_pilgrim():
-#     #returns the lone pilgrim id that the crusader will track
-#     for r in visible:
-#         if r['unit']==SPECS['PILGRIM']:
-#             x=r['x']
-#             y=r['y']
-#             if not karbonite_map[y][x] or not fuel_map[y][x]:
+
+    #just going to take his desitnation, look at the path to it, return the third element of the path
+    path = astar(me.log, me.is_visible, me.get_visible_robots(), me.get_passable_map(), loc, target, moves)
+    return path[2]
+
+def get_safe_tile(loc,full_map,karb_map,fuel_map,church_site):
+    moves=[
+       (0,1),(1,0),(0,-1),(1,0),(1,1),(-1,1),(1,-1),(-1,-1),(0,2),(2,0),(0,-2),(-2,0),
+    ]
+    x=loc[0]
+    y=loc[1]
+    passable=full_map[y][x]
+    resource= karb_map[y][x] or fuel_map[y][x]
+    temp_loc=loc
+    i=0
+    while not passable or resource or temp_loc==church_site:
+        temp_loc=apply_dir(loc,moves[i])
+        i=i+1
+        x=temp_loc[0]
+        y=temp_loc[1]
+        passable=full_map[y][x]
+        resource= karb_map[y][x] or fuel_map[y][x]
+    return temp_loc
 
 
 

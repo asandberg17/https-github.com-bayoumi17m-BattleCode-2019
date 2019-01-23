@@ -69,8 +69,8 @@ class MyRobot(BCAbstractRobot):
     castleBeaten=False
     destination=(0,0)
     last_health=0
-    guard=False
-    offense=False
+    raider=True
+    castle_killer=False
     returning_to_base=False
     squad=False
     meeting_place=(0,0)
@@ -197,6 +197,7 @@ class MyRobot(BCAbstractRobot):
             attackable = []
             possible_targets=[]
             signal = -1
+            church_in_sight=False
             for r in visible:
                 if self.is_radioing(r) and self.is_visible(r) and r['unit'] == SPECS['CASTLE']:
                     self.log("Receiving Signal: " + str(r['signal']))
@@ -208,10 +209,12 @@ class MyRobot(BCAbstractRobot):
                 # now all in vision range, can see x, y etc
                 possible_targets.append(r)
                 dist = (r['x'] - self.me['x'])**2 + (r['y'] - self.me['y'])**2
+                if r['team'] ==self.me['team'] and r['unit']==SPECS['CHURCH']:
+                    church_in_sight=True
                 if r['team'] != self.me['team'] and SPECS['UNITS'][SPECS["CRUSADER"]]['ATTACK_RADIUS'][0] <= dist <= SPECS['UNITS'][SPECS["CRUSADER"]]['ATTACK_RADIUS'][1]:
                     attackable.append(r)
                     
-            #TODO: now sort attackable
+            #TODO: now sort attackable, this can be done last
 
             if attackable:
                 # attack first robot
@@ -222,16 +225,17 @@ class MyRobot(BCAbstractRobot):
                 return self.attack(r['x'] - self.me['x'], r['y'] - self.me['y'])
             
             #TODO: now sort possible_targets if our health is decreasing otherwise continue with the given task
+            #we can sort possible_targets like we sort attackable
             if self.last_health>self.me['health']:
                 self.last_health=self.me['health']
                 #so we are under attack and not attacking back
                 if possible_targets:
-                    # attack first robot
+                    # attack first robot that is out of range but someone is firing on us
                     r = possible_targets[0]
-                    # if r['unit'] == SPECS['CASTLE']:
-                    #     self.castleBeaten = True
-                    # self.log('attacking! ' + str(r) + ' at loc ' + (r['x'] - self.me['x'], r['y'] - self.me['y']))
-                    # return self.attack(r['x'] - self.me['x'], r['y'] - self.me['y'])
+                    target=(r['x'],r['y'])
+                    path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, target, moves)
+                    action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+                    return self.move(*action)
 
             #so there is nobody to attack and no one attacking us time to continue with the mission
             self.last_health=self.me['health']
@@ -239,29 +243,50 @@ class MyRobot(BCAbstractRobot):
             if signal!=-1:
                 #process any signal received from a castle
                 self.log('receiving a signal')
-                self.destination,self.task = util.unHash(signal - 57471)
+                self.destination = util.unHash(signal - 57471)
 
                 #TODO: HERE WE WILL PROCESS THE DIFFERENT SIGNALS AND DETERMINE IF THIS UNIT IS A GUARD OR ATTACKING
 
-            if self.guard:
-                if my_loc != self.destination:
+            if self.raider:
+                self.log('I am a raider. I will attack '+self.destination)
+                if (my_loc[0]-self.destination[0])**2 +(my_loc[1]-self.destination[1])**2 <6:
+                    #if there is a church he can return home for his next target
+                    if church_in_sight:
+                        self.destination=self.home
+                        path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, self.destination, moves)
+                        action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+                        self.raider=False
+                        self.returning_to_base=True
+                        return self.move(*action)
+                    #else he is guarding there is nothing to do if he is not standing on a resource
+                    church_site=nav.church_build_site(self,SPECS,self.log,my_loc,self.map,self.get_fuel_map(),self.get_karbonite_map(),self.get_visible_robot_map())
+                    if self.get_fuel_map()[my_loc[1]][my_loc[0]] or self.get_karbonite_map()[my_loc[1]][my_loc[0]] or my_loc==church_site:
+                        safe_tile=nav.get_safe_tile(my_loc,self.get_passable_map(),self.get_karbonite_map(),self.get_fuel_map(),church_site)
+                        path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, safe_tile, moves)
+                        action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+                        return self.move(*action)
+                    return
+
+                else:
+                    self.log('not in position, sir!')
                     #hes not at his post he needs to get there
                     #MAYBE TODO: GET THE BEST POSITION TO GUARD RESOURCES FROM, PROPHETS WILL DEFINITELY NEED IT, OR WRITE IT FOR CASTLES
-                    path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                    path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, self.destination, moves)
                     action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
+
                     return self.move(*action)
-                else:
-                    #he is guarding there is nothign to do
-                    return
+
                    
-            if self.offense:
+            if self.castle_killer:
+                self.log('I am the slayer of castles. I will attack '+self.destination)
                 #he is either at his destination or not
                 if my_loc==self.destination:
+                    self.log('At my destination')
                     #hes in position but not attacking anymore, the castle must be beaten and he should return home
                     #going to have it right now so that he moves home and gets a new target
-                    self.offense=False
+                    self.castle_killer=False
                     self.returning_to_base=True
-                    path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                    path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, self.destination, moves)
                     action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                     #must inform the castle that the enemy is vanquished
                     self.castle_talk(111)
@@ -269,14 +294,13 @@ class MyRobot(BCAbstractRobot):
                 else:
                     #so he is moving to his destination
                     if self.squad != True:
-                        self.squad=nav.homies(self,SPECS,my_coord,self.get_visible_robots(),self.me['team'])
+                        self.squad=nav.homies(self,SPECS,my_loc,self.get_visible_robots(),self.me['team'])
                         if self.meeting_place==(0,0):
-                            self.meeting_place=nav.
-                        taken=nav.
+                            self.meeting_place=nav.meeting_place(self,my_loc,self.destination,moves)
                         #TODO: GET A FUNCTION THAT RETURNS A GOOD MEETING PLACE FOR FIVE CRUSADERS AND DOESNT LAND THEM ON RESOURCES AND IS TOWARDS THE ENEMY
                         if self.squad:
                             #then it is time to ride forth and do battle
-                            path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                            path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, self.destination, moves)
                             action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                             return self.move(*action)
                         if self.meeting_place==my_loc:
@@ -286,11 +310,11 @@ class MyRobot(BCAbstractRobot):
                             #must calculate a new meeting place
                         else:
                             #he is not as his meeting place nor does he have a squad
-                            path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.meeting_place, moves)
+                            path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, self.meeting_place, moves)
                             action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                             return self.move(*action)
                     #so he does have a squad he can go and attack 
-                    path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                    path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, self.destination, moves)
                     action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                     return self.move(*action)
 
@@ -298,8 +322,15 @@ class MyRobot(BCAbstractRobot):
                 #he is returning home
                 if self.is_home:
                     #drop off any resources and receive new signal for next enemy target
+                    #CHANGE THIS
+                    #PLEASE CHANGE THIS
+                    #TRYING TO MAKE IT GLARINLGY OBVIOUS!!!!!!!!!!!!!!!!!!!!
+                    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    return
                 #so he must still need to move home
-                path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_coord, self.destination, moves)
+                path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, self.destination, moves)
                 action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
                 return self.move(*action)
 
@@ -546,7 +577,7 @@ class MyRobot(BCAbstractRobot):
                 # targetX = str(targetX); targetY = str(targetY)
                 if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL']+202 and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
 
-                    self.log("Sending to target: (" + targetX + ", " + targetY + ")")
+                    # self.log("Sending to target: (" + targetX + ", " + targetY + ")")
                     # self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
                     signal = self.local_resources[self.pilgrims_built]
                     for bot in self.get_visible_robots():
@@ -572,6 +603,14 @@ class MyRobot(BCAbstractRobot):
                     if x>=len(self.get_passable_map())/2:
                         self.build_guard=True
                     return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+
+            if self.me['turn']<45:
+                signal = self.local_resources[self.pilgrims_built]
+                self.signal(util.nodeHash(*signal) + 57471, 2)
+                self.log("Building a Crusader at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
+
 
  
 
