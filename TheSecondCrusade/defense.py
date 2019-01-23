@@ -101,11 +101,13 @@ def hilbert_defense(pprint, loc, castle_loc, h_symmetry, visible_map, full_map, 
         defense_pos = pos
         break
 
+    pprint("defense_pos: " + str(defense_pos))
+
 
     return defense_pos
 
 
-def encircle(cur_loc, attack_loc, r2, visible_map, pass_map):
+def encircle(pprint, attack_loc, r2, tol, full_map):
     # Used to trap a castle in one spot so that it can not grow
     # If dist >= 150, continue towards the attack_loc
     # Otherwise using our vision, expand the shape
@@ -115,7 +117,29 @@ def encircle(cur_loc, attack_loc, r2, visible_map, pass_map):
     #"Follow": Follow the edge or stay behind current layer,
     #"Expand": continue forward toward our goal,
     #"Stop": Hold current position
-    pass
+
+    encirclement = []
+    encirclement_rev = []
+    size = len(full_map)
+
+    for j in range(size):
+        for l in range(size):
+            if (l-attack_loc[0])**2 + (j-attack_loc[1])**2 <= r2+tol and (l-attack_loc[0])**2 + (j-attack_loc[1])**2 >= r2-tol:
+                if full_map[j][l] == True:
+                    encirclement.append((l,j))
+                    encirclement_rev.append((l,j))
+                # pprint("Dist_sq: " + str((l-attack_loc[0])**2 + (j-attack_loc[1])**2) + ", is close: " + str(util.isclose((l-attack_loc[0])**2 + (j-attack_loc[1])**2,r2,rel_tol=0,abs_tol=8)))
+            # pprint("Dist: ")
+            # if util.isclose((l-attack_loc[0])**2 + (j-attack_loc[1])**2, r2,abs_tol=10):
+            #     pprint("Close")
+            #     if full_map[j][l] == True:
+            #         encirclement.append((l,j))
+            #         encirclement_rev.append((l,j))
+
+    # pprint("Len of encirclement: " + str(len(encirclement)))
+
+    return encirclement, encirclement_rev.reverse()
+                
 
 
 def BFSlattice(pprint,castle_loc,full_map,fuel_map,karbonite_map,vis_map):

@@ -246,8 +246,10 @@ def bin2dec(binary):
     decimal = 0 
     for digit in binary: 
         decimal = decimal*2 + int(digit) 
-
     return decimal
+
+def isclose(a,b,abs_tol=0):
+    return abs(a-b) <= abs_tol
 
 
 

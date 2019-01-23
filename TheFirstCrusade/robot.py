@@ -637,11 +637,10 @@ class MyRobot(BCAbstractRobot):
                     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                     return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
 
-                if self.me['turn']<180: # and self.me['turn'] % 2 == 0:
+                # if self.me['turn']<180: # and self.me['turn'] % 2 == 0:
                 # targetX, targetY = self.resources_sphere[self.pilgrims_built]
                 # targetX = str(targetX); targetY = str(targetY)
                 if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL']+202 and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
-
                     self.log("Sending to target: (" + targetX + ", " + targetY + ")")
                     # self.signal(int("" + str(len(targetX)) + targetX + targetY),2)
                     signal = self.local_resources[self.pilgrims_built]
