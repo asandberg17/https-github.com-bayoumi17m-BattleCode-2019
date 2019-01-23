@@ -396,26 +396,35 @@ def astar(pprint,check_vis,vis,full_map,start,goal,moves):
 
 
 
-def defense(full_map, bot_map, loc):
+def defense(full_map, loc):
     spoke=randint(1,4)
     target=loc[0],loc[1]
+    size = len(full_map)
 
     if spoke==1:
         target=target[0],target[1]+3
         while not full_map[target[1]][target[0]]:
             target=target[0],target[1]+1
+            if target[1] >= size:
+                target[1] = size
     if spoke==2:
         target=target[0]+3,target[1]
         while not full_map[target[1]][target[0]]:
             target=target[0]+1,target[1]
+            if target[0] >= size:
+                target[0] = size
     if spoke==3:
         target=target[0],target[1]-3
         while not full_map[target[1]][target[0]]:
             target=target[0],target[1]-1
+            if target[1] < 0:
+                target[1] = 0
     if spoke==4:
         target=target[0]-3,target[1]
         while not full_map[target[1]][target[0]]:
             target=target[0]-1,target[1]
+            if target[0] < 0:
+                target[0] = 0
     return target
 
 def defense_2(pprint, full_map, castle_loc, visible, defense_fields):
