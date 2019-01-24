@@ -44,6 +44,7 @@ class MyRobot(BCAbstractRobot):
     castle_loc = (-1,-1)
     entrapment = True
     numProphets = 0
+    numChurches = 0
 
     encircle = []
     encircle_rev = []
@@ -709,11 +710,16 @@ class MyRobot(BCAbstractRobot):
             #                 goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
             #                 return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
             self.numProphets = 0
+            self.numChurches = 0
             for bot in self.get_visible_robots():
                 if self.is_visible(bot):
                     if bot['team'] == self.me['team'] and bot['unit'] == SPECS['PROPHET']:
                         self.numProphets += 1
-                if bot['castle_talk'] > 0 and bot['castle_talk'] < 192:
+                
+                if bot['castle_talk'] == 190:
+                    self.numChurches += 1
+
+                if bot['castle_talk'] > 0 and bot['castle_talk'] < 150:
                     # self.log("Recieveing message: " + str(bot['castle_talk'] - 1))
                     self.filled_resources[self.global_resources[bot['castle_talk'] - 1]] = 1
 
@@ -779,13 +785,23 @@ class MyRobot(BCAbstractRobot):
                     return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
                 else:
                     return
+
+            if self.numChurches < self.numCastles and (len(self.filled_resources)  - 2*self.numCastles) / len(self.global_resources) >= 0.33:
+                # If we didn't build churches and we have 1/3 or more of the resources
+                return
+
             #######
             # Back. So after 30 turns or 1/2 of the map is filled. What should we do now?
             #######
             ###
             # Send prophet attackers or raids? Or..?
             ###
-            
+
+            # Check for crusader raid?
+            # Circle opponent? 
+            # Expand defenses?
+
+
 
             elif self.me['turn'] < 250 and self.me['turn'] > 150 and self.turnPos == 0:
                 if self.circle_proph < len(self.encircle):
@@ -805,44 +821,6 @@ class MyRobot(BCAbstractRobot):
                         self.circle_proph += 1
                         goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
                         return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
-
-            elif self.me['turn'] >= 500 and self.turnPos == 0 and self.me['turn'] <= 600:
-                if self.circle_proph >= len(self.encircle):
-                    castle_id = self.me['id']
-                    attack_loc = nav.reflect(self.get_passable_map(), self.castleLoc[castle_id], nav.symmetric(self.get_fuel_map()))
-                    # self.log(attack_loc)
-                    (self.encircle, self.encircle_rev) = defense.encircle(self.log, attack_loc, 160, 10, self.get_passable_map())
-                    self.encircle_idx = 0
-                    self.encircle_rev_idx = 0
-                    self.circle_proph = 0
-
-                # self.log("reset: " + str(self.circle_proph))
-
-                if self.circle_proph < len(self.encircle) and self.me['turn'] % 5 != 0:
-                    if self.fuel >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_KARBONITE']:
-                        self.log('Building a Crusader')
-
-                        # if self.encircle_idx == self.encircle_rev_idx:
-                        #     target_loc = self.encircle[self.encircle_idx]
-                        #     self.encircle_idx += 1
-                        # else:
-                        #     target_loc = self.encircle_rev[self.encircle_rev_idx]
-                        #     self.encircle_rev_idx += 1
-                        target1 = self.me['id']
-
-                        target_loc = nav.reflect(self.get_passable_map(), self.castleLoc[target1], nav.symmetric(self.get_fuel_map()))
-                        
-                        signal = util.nodeHash(*target_loc) + 57471
-                        self.signal(signal,4)
-                        # self.circle_proph += 1
-
-                        goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
-                        return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
-
-            # elif self.me['turn'] > 250:
-            #     self.log('Building a Preahcer')
-            #     goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
-            #     return self.build_unit(SPECS['PREACHER'], goal_dir[0], goal_dir[1])
 
             ###############
             ################
@@ -1049,6 +1027,7 @@ class MyRobot(BCAbstractRobot):
         elif self.me['unit']==SPECS['CHURCH']:
             my_coord = (self.me['x'], self.me['y'])
             my_loc=self.me['x'],self.me['y']
+            self.castle_talk(190)
             if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE'] and self.me['turn']%5 == 0:
                 self.log('Building a Prophet')
                 goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
