@@ -30,7 +30,9 @@ class MyRobot(BCAbstractRobot):
     global_resources = []
     local_resources = []
     filled_resources = {}
-    raid_count = 0
+    raid_count = 5
+    raid_build = 0
+    send_raid = True
 
     defense = True
     has_moved=False
@@ -73,7 +75,6 @@ class MyRobot(BCAbstractRobot):
 
     already_been = {}
     base = None
-    destination = None
 
     #variables for crusaders
     home=(0,0)
@@ -188,6 +189,20 @@ class MyRobot(BCAbstractRobot):
                 elif signal != -1:
                     self.destination = util.unHash(signal - 57471) # Potentially flip
                     # Ensure we aren't on a resource
+                    lst1 = []
+                    for i in range(len(self.get_fuel_map())):
+                        for k in range(len(self.get_fuel_map())):
+                            if fuel_map[i][k] or karbonite_map[i][k]:
+                                lst1.append(util.nodeHash(k,i))
+                    # self.log("lst1: " + str(lst1))
+                    util.insertionSort(self.log, lst1)
+
+                    # Order list of all locations
+                    for n in range(len(lst1)):
+                        lst1[n] = util.unHash(lst1[n])
+                    self.global_resources = lst1
+
+
                     if fuel_map[self.destination[1]][self.destination[0]] or karbonite_map[self.destination[1]][self.destination[0]]:
                         temp = self.destination
                         new_loc = False
@@ -719,6 +734,12 @@ class MyRobot(BCAbstractRobot):
                 if bot['castle_talk'] == 190:
                     self.numChurches += 1
 
+                if bot['castle_talk'] == 191:
+                    self.send_raid = True
+
+                if bot['castle_talk'] == 166:
+                    self.send_raid = False
+
                 if bot['castle_talk'] > 0 and bot['castle_talk'] < 150:
                     # self.log("Recieveing message: " + str(bot['castle_talk'] - 1))
                     self.filled_resources[self.global_resources[bot['castle_talk'] - 1]] = 1
@@ -786,25 +807,38 @@ class MyRobot(BCAbstractRobot):
                 else:
                     return
 
-            if self.numChurches < self.numCastles and (len(self.filled_resources)  - 2*self.numCastles) / len(self.global_resources) >= 0.33:
-                # If we didn't build churches and we have 1/3 or more of the resources
-                return
 
-            #######
-            # Back. So after 30 turns or 1/2 of the map is filled. What should we do now?
-            #######
-            ###
-            # Send prophet attackers or raids? Or..?
-            ###
 
-            # Check for crusader raid?
-            # Circle opponent? 
-            # Expand defenses?
+            if self.send_raid and self.raid_count > 0:
+                # Send an early present in the form of a raiding party
+                if self.fuel >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_KARBONITE']:
+
+                    i = 0
+                    k = 0
+                    while util.euclidianDistance((self.anti_targets[i][0],self.anti_targets[i][1]),(self.anti_targets[k][0],self.anti_targets[k][1])) <= 50:
+                        while util.euclidianDistance((self.anti_targets[0][0],self.anti_targets[0][1]),(self.anti_targets[i][0],self.anti_targets[i][1])) <= 50:
+                            i += 1
+                        k += 1
+                        
+                    self.raid_count -= 1
+
+                    if self.raid_count == 0:
+                        self.send_raid = False
+                        self.raid_count = 5
+
+                    signal_to_send = int(util.nodeHash(self.anti_targets[k][0],self.anti_targets[k][1])) + 57471
+                    self.signal(signal_to_send, 4)
+                    self.log("Building a Crusader!")
+                    goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                    return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
+
+
+                
 
             #I think we need to send a couple more raiding prophets out  if they detect a church they send back a signal and we send 
             # a raiding party. if a church is under attack, we send a raiding party. 
             # After a few more prophets lets build some more defensive prophets and then get 2 maybe more pilgrims. Then lets alternate
-            #between containment, and prophets if there are available resources, all the while watching for moments to send raiders. 
+            #between containment, and prophets if there are available resources, all the while watching for moments to send raiders.
 
 
 
