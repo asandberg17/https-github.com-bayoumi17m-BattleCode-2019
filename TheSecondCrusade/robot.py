@@ -801,6 +801,11 @@ class MyRobot(BCAbstractRobot):
             # Circle opponent? 
             # Expand defenses?
 
+            #I think we need to send a couple more raiding prophets out  if they detect a church they send back a signal and we send 
+            # a raiding party. if a church is under attack, we send a raiding party. 
+            # After a few more prophets lets build some more defensive prophets and then get 2 maybe more pilgrims. Then lets alternate
+            #between containment, and prophets if there are available resources, all the while watching for moments to send raiders. 
+
 
 
             elif self.me['turn'] < 250 and self.me['turn'] > 150 and self.turnPos == 0:
