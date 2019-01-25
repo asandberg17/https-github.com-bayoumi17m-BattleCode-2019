@@ -1004,6 +1004,27 @@ def get_safe_tile(loc,full_map,karb_map,fuel_map,church_site):
     return temp_loc
 
 
+def get_nearby_resources():
+    x_start=loc[0]-7
+    x_end=loc[0]+8
+    y_start=loc[1]-7
+    y_end=loc[1]+8
+    if x_start<0:
+        x_start=0
+    if x_end>len(full_map):
+        x_end=len(full_map)
+    if y_start<0:
+        y_start=0
+    if y_end>len(full_map):
+        y_end=len(full_map)
+    num_resources=0
+    for x in range(x_start,x_end):
+        for y in range(y_start,y_end):
+            if karb_map[y][x] or fuel_map[y][x]:
+                num_resources=+1
+    return num_resources
+
+
 
 
 
