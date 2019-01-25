@@ -30,7 +30,7 @@ class MyRobot(BCAbstractRobot):
     global_resources = []
     local_resources = []
     filled_resources = {}
-    raid_count = 5
+    raid_count = 4
     raid_build = 0
     send_raid = True
     raid_clear = True
@@ -835,24 +835,39 @@ class MyRobot(BCAbstractRobot):
                 if self.fuel >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_KARBONITE']:
                     self.castle_talk(166)
 
-                    i = 0
-                    k = 0
-                    while util.euclidianDistance((self.anti_targets[i][0],self.anti_targets[i][1]),(self.anti_targets[k][0],self.anti_targets[k][1])) <= 50:
-                        while util.euclidianDistance((self.anti_targets[0][0],self.anti_targets[0][1]),(self.anti_targets[i][0],self.anti_targets[i][1])) <= 50:
-                            i += 1
-                        k += 1
+                    if len(self.anti_targets) > 0:
 
-                    self.raid_count -= 1
+                        i = 0
+                        k = 0
+                        while util.euclidianDistance((self.anti_targets[i][0],self.anti_targets[i][1]),(self.anti_targets[k][0],self.anti_targets[k][1])) <= 50:
+                            if k >= len(self.anti_targets):
+                                break
+                            while util.euclidianDistance((self.anti_targets[0][0],self.anti_targets[0][1]),(self.anti_targets[i][0],self.anti_targets[i][1])) <= 50:
+                                i += 1
+                            k += 1
 
-                    self.last_raid = k
+                        self.raid_count -= 1
 
-                    if self.raid_count == 0:
-                        self.send_raid = False
-                        self.raid_count = 5
-                        self.raid_build += 1
+                        self.last_raid = k
 
-                    signal_to_send = int(util.nodeHash(self.anti_targets[k][0],self.anti_targets[k][1])) + 57471
-                    self.signal(signal_to_send, 4)
+                        if self.raid_count == 0:
+                            self.send_raid = False
+                            self.raid_count = 5
+                            self.raid_build += 1
+
+                        signal_to_send = int(util.nodeHash(self.anti_targets[k][0],self.anti_targets[k][1])) + 57471
+                        self.signal(signal_to_send, 4)
+                    else:
+                        target_loc = nav.reflect(self.get_passable_map(), my_coord, nav.symmetric(self.get_karbonite_map()))
+                        signal_to_send = int(util.nodeHash(target_loc[0],target_loc[1])) + 57471
+                        self.signal(signal_to_send, 4)
+                        self.raid_count -= 1
+                        self.raid_count -= 1
+                        if self.raid_count == 0:
+                            self.send_raid = False
+                            self.raid_count = 5
+                            self.raid_build += 1
+
                     self.log("Building a Crusader!")
                     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                     return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
@@ -861,8 +876,8 @@ class MyRobot(BCAbstractRobot):
                 if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
                     if self.last_raid >= 0:
                         self.pilgrims_to_send -= 1
-                        if self.pilgrims_to_send == 0:
-                            self.raid_clear = False
+                        # if self.pilgrims_to_send == 0:
+                        #     self.raid_clear = True
                         signal = self.anti_targets[self.last_raid]
                         self.log("All clear: "+str(signal))
 
@@ -891,27 +906,37 @@ class MyRobot(BCAbstractRobot):
                 if self.fuel >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_KARBONITE']:
                     self.castle_talk(166)
 
-                    i = self.last_raid
-                    k = self.last_raid
-                    while util.euclidianDistance((self.anti_targets[i][0],self.anti_targets[i][1]),(self.anti_targets[k][0],self.anti_targets[k][1])) <= 50:
-                        if k >= len(self.anti_targets):
-                            break
+                    if len(self.anti_targets) > 0:
 
-                        k += 1
+                        i = 0
+                        k = 0
+                        while util.euclidianDistance((self.anti_targets[i][0],self.anti_targets[i][1]),(self.anti_targets[k][0],self.anti_targets[k][1])) <= 50:
+                            if k >= len(self.anti_targets):
+                                break
+                            while util.euclidianDistance((self.anti_targets[0][0],self.anti_targets[0][1]),(self.anti_targets[i][0],self.anti_targets[i][1])) <= 50:
+                                i += 1
+                            k += 1
 
+                        self.raid_count -= 1
 
-                    self.raid_count -= 1
+                        self.last_raid = k
 
-                    self.last_raid = k
+                        if self.raid_count == 0:
+                            self.send_raid = False
+                            self.raid_count = 5
+                            self.raid_build += 1
 
-
-                    if self.raid_count == 0:
-                        self.send_raid = False
-                        self.raid_count = 5
-                        self.raid_build += 1
-
-                    signal_to_send = int(util.nodeHash(self.anti_targets[k][0],self.anti_targets[k][1])) + 57471
-                    self.signal(signal_to_send, 4)
+                        signal_to_send = int(util.nodeHash(self.anti_targets[k][0],self.anti_targets[k][1])) + 57471
+                        self.signal(signal_to_send, 4)
+                    else:
+                        target_loc = nav.reflect(self.get_passable_map(), my_coord, nav.symmetric(self.get_karbonite_map()))
+                        signal_to_send = int(util.nodeHash(target_loc[0],target_loc[1])) + 57471
+                        self.signal(signal_to_send, 4)
+                        self.raid_count -= 1
+                        if self.raid_count == 0:
+                            self.send_raid = False
+                            self.raid_count = 5
+                            self.raid_build += 1
                     self.log("Building a Crusader!")
                     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                     return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
