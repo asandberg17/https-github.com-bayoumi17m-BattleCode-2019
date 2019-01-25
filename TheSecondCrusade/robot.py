@@ -352,6 +352,7 @@ class MyRobot(BCAbstractRobot):
                 #process any signal received from a castle
                 self.log('receiving a signal')
                 self.destination = util.unHash(signal - 57471)
+                self.raid_clear = False
 
                 #TODO: HERE WE WILL PROCESS THE DIFFERENT SIGNALS AND DETERMINE IF THIS UNIT IS A GUARD OR ATTACKING
 
@@ -367,7 +368,9 @@ class MyRobot(BCAbstractRobot):
                         self.returning_to_base=True
                         # return self.move(*action)
                     #else he is guarding there is nothing to do if he is not standing on a resource
-                    self.castle_talk(170 + nav.get_nearby_resources(self.get_passable_map(),self.get_fuel_map(),self.get_karbonite_map(),my_loc))
+                    if not self.raid_clear:
+                        self.castle_talk(170 + nav.get_nearby_resources(self.get_passable_map(),self.get_fuel_map(),self.get_karbonite_map(),my_loc))
+                        self.raid_clear = True
                     church_site=nav.church_build_site(self,SPECS,self.log,my_loc,self.map,self.get_fuel_map(),self.get_karbonite_map(),self.get_visible_robot_map())
                     if self.get_fuel_map()[my_loc[1]][my_loc[0]] or self.get_karbonite_map()[my_loc[1]][my_loc[0]] or my_loc==church_site:
                         safe_tile=nav.get_safe_tile(my_loc,self.get_passable_map(),self.get_karbonite_map(),self.get_fuel_map(),church_site)
@@ -840,6 +843,7 @@ class MyRobot(BCAbstractRobot):
                     if self.raid_count == 0:
                         self.send_raid = False
                         self.raid_count = 5
+                        self.raid_build += 1
 
                     signal_to_send = int(util.nodeHash(self.anti_targets[k][0],self.anti_targets[k][1])) + 57471
                     self.signal(signal_to_send, 4)
@@ -850,6 +854,9 @@ class MyRobot(BCAbstractRobot):
             if self.raid_clear and self.pilgrims_to_send > 0:
                 if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
                     if self.last_raid >= 0:
+                        self.pilgrims_to_send -= 1
+                        if self.pilgrims_to_send == 0:
+                            self.raid_clear = False
                         signal = self.anti_targets[self.last_raid]
                         self.log("All clear: "+str(signal))
 
@@ -861,6 +868,84 @@ class MyRobot(BCAbstractRobot):
                         return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
                 else:
                     return
+
+            if self.numProphets < 16:
+                self.log("Need to build defense")
+                # TODO: Don't count units that are offensive or anti-expansion
+                # These units are for defense
+                if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE']:
+                    self.log("Building a Prophet")
+                    goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
+                    return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
+                else:
+                    return
+
+            if self.raid_count > 0 and self.raid_build == 1:
+                # Send an early present in the form of a raiding party
+                if self.fuel >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_KARBONITE']:
+                    self.castle_talk(166)
+
+                    i = self.last_raid
+                    k = self.last_raid
+                    while util.euclidianDistance((self.anti_targets[i][0],self.anti_targets[i][1]),(self.anti_targets[k][0],self.anti_targets[k][1])) <= 50:
+                        if k >= len(self.anti_targets):
+                            break
+
+                        k += 1
+
+
+                    self.raid_count -= 1
+
+
+                    if self.raid_count == 0:
+                        self.send_raid = False
+                        self.raid_count = 5
+                        self.raid_build += 1
+
+                    signal_to_send = int(util.nodeHash(self.anti_targets[k][0],self.anti_targets[k][1])) + 57471
+                    self.signal(signal_to_send, 4)
+                    self.log("Building a Crusader!")
+                    goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                    return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
+
+            if len(self.filled_resources) < len(self.global_resources) // 2:
+                # Fill up at least 1/2 of the resources?
+                if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
+                    signal = self.local_resources[0]
+
+                    i = 0
+                    while signal in self.filled_resources:
+                        signal = self.local_resources[i] # [self.pilgrims_built + i]
+                        i = i + 1
+
+                    self.signal(util.nodeHash(*signal) + 57471, 4)
+
+                    self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                    goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                    self.pilgrims_built=self.pilgrims_built+1
+                    return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+                else:
+                    return
+
+            if self.circle_proph < len(self.encircle):
+                self.log("Circle incomplete!")
+                if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE'] and self.me['turn']%3 != 0:
+                    self.log('Building a Prophet')
+                    
+                    # if self.encircle_idx == self.encircle_rev_idx:
+                    target_loc = self.encircle[self.encircle_idx]
+                    self.encircle_idx += 1
+                    # else:
+                    #     target_loc = self.encircle_rev[self.encircle_rev_idx]
+                    #     self.encircle_rev_idx += 1
+                    
+                    signal = util.nodeHash(*target_loc) + 57471
+                    self.signal(signal,4)
+                    self.circle_proph += 1
+                    goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
+                    return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
+
+
     
 
 
