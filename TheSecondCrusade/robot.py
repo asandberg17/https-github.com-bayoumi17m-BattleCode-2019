@@ -921,13 +921,11 @@ class MyRobot(BCAbstractRobot):
 
                     if len(self.anti_targets) > 0:
 
-                        i = 0
-                        k = 0
+                        i = self.last_raid
+                        k = self.last_raid
                         while util.euclidianDistance((self.anti_targets[i][0],self.anti_targets[i][1]),(self.anti_targets[k][0],self.anti_targets[k][1])) <= 50:
                             if k >= len(self.anti_targets):
                                 break
-                            while util.euclidianDistance((self.anti_targets[0][0],self.anti_targets[0][1]),(self.anti_targets[i][0],self.anti_targets[i][1])) <= 50:
-                                i += 1
                             k += 1
 
                         self.raid_count -= 1
