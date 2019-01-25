@@ -931,7 +931,7 @@ def get_closest_resources_pilgrim(pprint,loc,robot_map,full_map,fuel_map,karboni
     return closest_resources_large
 
 
-def meeting_place(me,loc,target,moves):
+def meeting_place(me,loc,target,moves,pprint):
     # #if the map is symmetric(ie its horizontal), then we want the meeting place to be closer to the enemy y axis wise
     # if symmetric:
     #     if loc[1]<len(full_map):
@@ -982,6 +982,7 @@ def meeting_place(me,loc,target,moves):
 
     #just going to take his desitnation, look at the path to it, return the third element of the path
     path = astar(me.log, me.is_visible, me.get_visible_robots(), me.get_passable_map(), loc, target, moves)
+    pprint('length of the path is '+len(path))
     return path[2]
 
 def get_safe_tile(loc,full_map,karb_map,fuel_map,church_site):

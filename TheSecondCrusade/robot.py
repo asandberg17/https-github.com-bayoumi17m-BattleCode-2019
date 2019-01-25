@@ -386,10 +386,11 @@ class MyRobot(BCAbstractRobot):
                         self.squad=nav.homies(self,SPECS,my_loc,self.get_visible_robots(),self.me['team'],'CRUSADER')
                         self.log('I have a squad: '+self.squad)
                         if self.meeting_place==(0,0):
-                            self.meeting_place=nav.meeting_place(self,my_loc,self.destination,moves)
+                            self.meeting_place=nav.meeting_place(self,my_loc,self.destination,moves,self.log)
                             self.meeting_place=(self.meeting_place.x,self.meeting_place.y)
                             self.log('Meeting my bretheren at '+self.meeting_place.x+','+self.meeting_place.y)
                         if self.squad:
+                            self.log('Roll my windows down and cruiseeeeee')
                             #then it is time to ride forth and do battle
                             path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, self.destination, moves)
                             action = (path[1].x - self.me['x'], path[1].y - self.me['y'])
@@ -803,8 +804,12 @@ class MyRobot(BCAbstractRobot):
                 else:
                     return
 
-            if len(self.filled_resources) < len(self.global_resources) // 2 and self.me['turn'] < 50:
+            if len(self.filled_resources) < len(self.global_resources) // 3 : #and self.me['turn'] < 75:
                 # Fill up at least 1/2 of the resources?
+                if self.fuel<150 and self.karbonite<60:
+                    return
+                if self['turn']%4==1 or self['turn']%4==2 or self['turn']%4==3:
+                    return
                 if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
                     signal = self.local_resources[0]
 
@@ -822,7 +827,8 @@ class MyRobot(BCAbstractRobot):
                 else:
                     return
 
-
+            if self['turn']<200:
+                return
 
             if self.send_raid and self.raid_count > 0:
                 # Send an early present in the form of a raiding party
