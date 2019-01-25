@@ -748,9 +748,9 @@ class MyRobot(BCAbstractRobot):
                 if bot['castle_talk'] == 166 and bot['id'] != self.me['id']:
                     self.send_raid = False
 
-                if bot['castle_talk'] > 170 and bot['castle_talk'] < 190:
+                if bot['castle_talk'] >= 170 and bot['castle_talk'] < 190:
                     self.raid_clear = True
-                    self.pilgrims_to_send = bot['castle_talk'] - 170
+                    self.pilgrims_to_send = (bot['castle_talk'] - 170)
 
                 if bot['castle_talk'] > 0 and bot['castle_talk'] < 150:
                     # self.log("Recieveing message: " + str(bot['castle_talk'] - 1))
@@ -847,19 +847,20 @@ class MyRobot(BCAbstractRobot):
                     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                     return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
 
-            # if self.raid_clear and self.pilgrims_to_send > 0:
-            #     if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
+            if self.raid_clear and self.pilgrims_to_send > 0:
+                if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
+                    if self.last_raid >= 0:
+                        signal = self.anti_targets[self.last_raid]
+                        self.log("All clear: "+str(signal))
 
-            #         signal = self.anti_expand_targets[self.last_raid]
+                        self.signal(util.nodeHash(*signal) + 57471, 4)
 
-            #         self.signal(util.nodeHash(*signal) + 57471, 4)
-
-            #         self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-            #         goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-            #         self.pilgrims_built=self.pilgrims_built+1
-            #         return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
-            #     else:
-            #         return
+                        self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                        goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                        self.pilgrims_built=self.pilgrims_built+1
+                        return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+                else:
+                    return
     
 
 
