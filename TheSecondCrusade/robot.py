@@ -33,6 +33,9 @@ class MyRobot(BCAbstractRobot):
     raid_count = 5
     raid_build = 0
     send_raid = True
+    raid_clear = True
+    last_raid = -1
+    pilgrims_to_send
 
     defense = True
     has_moved=False
@@ -128,6 +131,10 @@ class MyRobot(BCAbstractRobot):
                 if self.me['turn'] == 1:
                     if r['unit'] == SPECS['PROPHET']:
                         type_seen += 1
+
+                # if self.me['turn'] != 1:
+                #     if (r['x'],r['y']) == self.destination and self.defending:
+                #         self.destination = defense.lattice(self.log, self.castle_loc, full_map, fuel_map, karbonite_map, self.get_visible_robots(), self.is_visible)
 
                 # if r['team'] != self.me['team'] and not self.defending:
                 #     self.castle_talk(91)
@@ -360,6 +367,7 @@ class MyRobot(BCAbstractRobot):
                         self.returning_to_base=True
                         # return self.move(*action)
                     #else he is guarding there is nothing to do if he is not standing on a resource
+                    self.castle_talk(170 + nav.get_nearby_resources(loc,))
                     church_site=nav.church_build_site(self,SPECS,self.log,my_loc,self.map,self.get_fuel_map(),self.get_karbonite_map(),self.get_visible_robot_map())
                     if self.get_fuel_map()[my_loc[1]][my_loc[0]] or self.get_karbonite_map()[my_loc[1]][my_loc[0]] or my_loc==church_site:
                         safe_tile=nav.get_safe_tile(my_loc,self.get_passable_map(),self.get_karbonite_map(),self.get_fuel_map(),church_site)
@@ -372,7 +380,7 @@ class MyRobot(BCAbstractRobot):
                 else:
                     self.log('not in position, sir!')
                     if self.squad != True:
-                        self.squad=nav.homies(self,SPECS,my_loc,self.get_visible_robots(),self.me['team'])
+                        self.squad=nav.homies(self,SPECS,my_loc,self.get_visible_robots(),self.me['team'],'CRUSADER')
                         self.log('I have a squad: '+self.squad)
                         if self.meeting_place==(0,0):
                             self.meeting_place=nav.meeting_place(self,my_loc,self.destination,moves)
@@ -737,8 +745,12 @@ class MyRobot(BCAbstractRobot):
                 if bot['castle_talk'] == 191:
                     self.send_raid = True
 
-                if bot['castle_talk'] == 166:
+                if bot['castle_talk'] == 166 and bot['id'] != self.me['id']:
                     self.send_raid = False
+
+                if bot['castle_talk'] > 170 and bot['castle_talk'] < 190:
+                    self.raid_clear = True
+                    self.pilgrims_to_send = bot['castle_talk'] - 170
 
                 if bot['castle_talk'] > 0 and bot['castle_talk'] < 150:
                     # self.log("Recieveing message: " + str(bot['castle_talk'] - 1))
@@ -788,7 +800,7 @@ class MyRobot(BCAbstractRobot):
                 else:
                     return
 
-            if len(self.filled_resources) < len(self.global_resources) // 2 and self.me['turn'] < 30:
+            if len(self.filled_resources) < len(self.global_resources) // 2 and self.me['turn'] < 50:
                 # Fill up at least 1/2 of the resources?
                 if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
                     signal = self.local_resources[0]
@@ -812,6 +824,7 @@ class MyRobot(BCAbstractRobot):
             if self.send_raid and self.raid_count > 0:
                 # Send an early present in the form of a raiding party
                 if self.fuel >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_KARBONITE']:
+                    self.castle_talk(166)
 
                     i = 0
                     k = 0
@@ -819,8 +832,10 @@ class MyRobot(BCAbstractRobot):
                         while util.euclidianDistance((self.anti_targets[0][0],self.anti_targets[0][1]),(self.anti_targets[i][0],self.anti_targets[i][1])) <= 50:
                             i += 1
                         k += 1
-                        
+
                     self.raid_count -= 1
+
+                    self.last_raid = k
 
                     if self.raid_count == 0:
                         self.send_raid = False
@@ -832,34 +847,43 @@ class MyRobot(BCAbstractRobot):
                     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                     return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
 
+            if self.raid_clear and pilgrims_to_send > 0:
+                if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
+
+                    signal = self.anti_expand_targets[self.last_raid]
+
+                    self.signal(util.nodeHash(*signal) + 57471, 4)
+
+                    self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+                    goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+                    self.pilgrims_built=self.pilgrims_built+1
+                    return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+                else:
+                    return
 
                 
 
-            #I think we need to send a couple more raiding prophets out  if they detect a church they send back a signal and we send 
-            # a raiding party. if a church is under attack, we send a raiding party. 
-            # After a few more prophets lets build some more defensive prophets and then get 2 maybe more pilgrims. Then lets alternate
-            #between containment, and prophets if there are available resources, all the while watching for moments to send raiders.
 
 
 
-            elif self.me['turn'] < 250 and self.me['turn'] > 150 and self.turnPos == 0:
-                if self.circle_proph < len(self.encircle):
-                    self.log("Circle incomplete!")
-                    if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE'] and self.me['turn']%3 != 0:
-                        self.log('Building a Prophet')
+            # elif self.me['turn'] < 250 and self.me['turn'] > 150 and self.turnPos == 0:
+            #     if self.circle_proph < len(self.encircle):
+            #         self.log("Circle incomplete!")
+            #         if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE'] and self.me['turn']%3 != 0:
+            #             self.log('Building a Prophet')
                         
-                        # if self.encircle_idx == self.encircle_rev_idx:
-                        target_loc = self.encircle[self.encircle_idx]
-                        self.encircle_idx += 1
-                        # else:
-                        #     target_loc = self.encircle_rev[self.encircle_rev_idx]
-                        #     self.encircle_rev_idx += 1
+            #             # if self.encircle_idx == self.encircle_rev_idx:
+            #             target_loc = self.encircle[self.encircle_idx]
+            #             self.encircle_idx += 1
+            #             # else:
+            #             #     target_loc = self.encircle_rev[self.encircle_rev_idx]
+            #             #     self.encircle_rev_idx += 1
                         
-                        signal = util.nodeHash(*target_loc) + 57471
-                        self.signal(signal,4)
-                        self.circle_proph += 1
-                        goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
-                        return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
+            #             signal = util.nodeHash(*target_loc) + 57471
+            #             self.signal(signal,4)
+            #             self.circle_proph += 1
+            #             goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
+            #             return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
 
             ###############
             ################

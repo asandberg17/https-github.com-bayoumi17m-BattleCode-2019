@@ -62,6 +62,17 @@ def unattainable(lst1, castle_loc, full_map, h_symmetric, loc):
 
     return lst2
 
+def hotspots(targets):
+    target_zones = []
+    current = target[0]
+    for target in targets:
+        dist = util.euclidianDistance(target,current)
+        if dist >= 20:
+            target_zones.append(target)
+            current = target
+
+    return target_zones
+
 def anti_expand_targets(pprint, karb_map, fuel_map, full_map, castle_loc, h_symmetric, loc):
     # Generate sorted resources
     lst1 = sortedResources(pprint, karb_map, fuel_map, castle_loc)
