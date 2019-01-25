@@ -896,6 +896,8 @@ class MyRobot(BCAbstractRobot):
 
                     self.raid_count -= 1
 
+                    self.last_raid = k
+
 
                     if self.raid_count == 0:
                         self.send_raid = False
