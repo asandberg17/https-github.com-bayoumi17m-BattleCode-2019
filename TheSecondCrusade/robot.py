@@ -30,7 +30,7 @@ class MyRobot(BCAbstractRobot):
     global_resources = []
     local_resources = []
     filled_resources = {}
-    raid_count = 4
+    raid_count = 5
     raid_build = 0
     send_raid = True
     raid_clear = True
@@ -702,8 +702,8 @@ class MyRobot(BCAbstractRobot):
                         #################TESTING NEW ANTI-EXPANSION STRATEGY###################
                         if self.anti_targets != []:
                             i = 0
-                            while util.euclidianDistance((self.anti_targets[0][0],self.anti_targets[0][1]),(self.anti_targets[i][0],self.anti_targets[i][1])) <= 50:
-                                i += 1
+                            # while util.euclidianDistance((self.anti_targets[0][0],self.anti_targets[0][1]),(self.anti_targets[i][0],self.anti_targets[i][1])) <= 50:
+                            #     i += 1
                             signal_to_send = int(util.nodeHash(self.anti_targets[i][0],self.anti_targets[i][1])) + 57471
                             self.signal(signal_to_send, 4)
                             self.log("Building a Prophet!")
@@ -767,7 +767,7 @@ class MyRobot(BCAbstractRobot):
                     # self.log("Recieveing message: " + str(bot['castle_talk'] - 1))
                     self.filled_resources[self.global_resources[bot['castle_talk'] - 1]] = 1
 
-            if self.pilgrims_built < 5 and len(self.filled_resources) < len(self.global_resources) // 2:
+            if self.pilgrims_built < 10 and len(self.filled_resources) < len(self.global_resources) // 2:
                 # targetX, targetY = self.resources_sphere[self.pilgrims_built]
                 # targetX = str(targetX); targetY = str(targetY)
                 if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
@@ -903,17 +903,6 @@ class MyRobot(BCAbstractRobot):
                 else:
                     return
 
-            if self.numProphets < 16:
-                self.log("Need to build defense")
-                # TODO: Don't count units that are offensive or anti-expansion
-                # These units are for defense
-                if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE']:
-                    self.log("Building a Prophet")
-                    goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
-                    return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
-                else:
-                    return
-
             if self.raid_count > 0 and self.raid_build == 1:
                 # Send an early present in the form of a raiding party
                 if self.fuel >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_KARBONITE']:
@@ -970,6 +959,17 @@ class MyRobot(BCAbstractRobot):
                     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                     self.pilgrims_built=self.pilgrims_built+1
                     return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+                else:
+                    return
+
+            if self.numProphets < 16:
+                self.log("Need to build defense")
+                # TODO: Don't count units that are offensive or anti-expansion
+                # These units are for defense
+                if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE']:
+                    self.log("Building a Prophet")
+                    goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
+                    return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
                 else:
                     return
 
