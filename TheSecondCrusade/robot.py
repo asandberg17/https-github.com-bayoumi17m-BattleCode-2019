@@ -943,7 +943,7 @@ class MyRobot(BCAbstractRobot):
 
             #this was the second time we tried to fill half the map
 
-            if len(self.filled_resources) < len(self.global_resources) // 3/2 :
+            if len(self.filled_resources) < len(self.global_resources) // 2:
                 # Fill up at least 1/2 of the resources?
                 if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
                     signal = self.local_resources[0]
@@ -1135,9 +1135,10 @@ class MyRobot(BCAbstractRobot):
                 if len(path) < 2:
                     # self.log("Path: " + str(path))
                     # self.log("PATH TOO SHORT - Resource")
-                    self.closest_resources=nav.get_closest_resources_pilgrim(self.log,my_loc,self.get_visible_robot_map(),self.get_passable_map(),self.get_fuel_map(),self.get_karbonite_map())
+                    self.filled_resources[self.target] = 1
+                    self.closest_resources=nav.get_closest_resources_pilgrim(self.log,my_loc,self.get_visible_robot_map(),self.get_passable_map(),self.get_fuel_map(),self.get_karbonite_map(), self.filled_resources)
                     self.target = self.closest_resources[0]
-                    path = path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, (self.target), moves)
+                    path = nav.astar(self.log, self.is_visible, self.get_visible_robots(), self.get_passable_map(), my_loc, self.target, moves)
 
                     for n in range(len(self.global_resources)):
                         if self.global_resources[n] == self.target:

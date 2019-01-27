@@ -643,7 +643,7 @@ def church_or_no(me,loc,map,visible,karb,fuel):
     # total_karbonite=karbonite+my_karbonite
     # total_fuel=fuel+my_fuel
 
-    return len(churches)==0 #and karb>=50 and fuel>=200
+    return len(churches)==0 and karb>=50 and fuel>=200
 #returns a boolean on whether or not a church needs to be built
 #when were standing on the location to build a church we need to check once more that it is still necessary and that another robot
 #hasnt built one before
@@ -891,7 +891,7 @@ def get_closest_resources_church(pprint,loc,robot_map,full_map,fuel_map,karbonit
 
 
 
-def get_closest_resources_pilgrim(pprint,loc,robot_map,full_map,fuel_map,karbonite_map):
+def get_closest_resources_pilgrim(pprint,loc,robot_map,full_map,fuel_map,karbonite_map,filled_resources):
     closest_resources_large=[]
     #getting all the closest resources where a pilgrim is
     if x_end>len(full_map):
@@ -900,6 +900,8 @@ def get_closest_resources_pilgrim(pprint,loc,robot_map,full_map,fuel_map,karboni
         y_end=len(full_map)
     for x in range(0,len(full_map)):
         for y in range(0,len(full_map)):
+            if (x,y) in filled_resources:
+                continue
             if (fuel_map[y][x] or karbonite_map[y][x]) and robot_map[y][x]<=0:
                 closest_resources_large.append((x,y))
     
