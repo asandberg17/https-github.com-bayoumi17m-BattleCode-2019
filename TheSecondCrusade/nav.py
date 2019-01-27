@@ -858,27 +858,11 @@ def homies(self,SPECS,loc,visible,team,unit):
 
 def get_closest_resources_church(pprint,loc,robot_map,full_map,fuel_map,karbonite_map):
     closest_resources=[]
-    closest_resources_large=[]
 
     #ill get the closest resources in a radius of 25, then ill go through that list and make all the resources in a radius of two,
     #then each castle or church should send pilgrims to any in their radius two circle then send three more out to the next two elements
     #on the radius 25 list
-    x_start=loc[0]-(len(full_map)//2)
-    y_start=loc[1]-(len(full_map)//2)
-    if x_start<0:
-        x_start=0
-    if y_start<0:
-        y_start=0
-    x_end=loc[0]+(len(full_map)//2)
-    y_end=loc[1]+(len(full_map)//2)
-    if x_end>len(full_map):
-        x_end=len(full_map)
-    if y_end>len(full_map):
-        y_end=len(full_map)
-    for x in range(x_start,x_end):
-        for y in range(y_start,y_end):
-            if (fuel_map[y][x] or karbonite_map[y][x]) and robot_map[y][x]<=0:
-                closest_resources_large.append((x,y))
+
     
     x_start=loc[0]-2
     x_end=loc[0]+3
@@ -894,19 +878,15 @@ def get_closest_resources_church(pprint,loc,robot_map,full_map,fuel_map,karbonit
         y_end=len(full_map)
     for x in range(x_start,x_end):
         for y in range(y_start,y_end):
-            if fuel_map[y][x] or karbonite_map[y][x]:
+            if (fuel_map[y][x] or karbonite_map[y][x]) and robot_map[y][x]<=0:
                 closest_resources.append((x,y))
 
 
     #now have order both lists by distance
     util.insertionSortLoc(pprint, closest_resources, loc)
-    util.insertionSortLoc(pprint, closest_resources_large, loc)
     # quickSort(closest_resources,closest_resources[0],closest_resources[len(closest_resources)+1],loc)
     # quickSort(closest_resources_large,closest_resources_large[0],closest_resources_large[len(closest_resources_large)+1],loc)
-    if len(closest_resources)<len(closest_resources_large):
-        closest_resources.append(closest_resources_large[len(closest_resources)])
-    if len(closest_resources)<len(closest_resources_large):
-        closest_resources.append(closest_resources_large[len(closest_resources)])
+
     return closest_resources
 
 

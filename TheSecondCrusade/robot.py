@@ -36,6 +36,10 @@ class MyRobot(BCAbstractRobot):
     raid_clear = True
     last_raid = -1
     pilgrims_to_send = 0
+    counter=0
+
+    #for churches
+    preachers_built=0
 
     defense = True
     has_moved=False
@@ -485,7 +489,7 @@ class MyRobot(BCAbstractRobot):
 
                
         elif self.me['unit'] == SPECS['PREACHER']:
-            self.log("Preahcer health: " + str(self.me['health'])) 
+            self.log("Preacher health: " + str(self.me['health'])) 
 
             if self.me['turn'] == 1:
                 self.homePath = (self.me['x'],self.me['y'])
@@ -540,8 +544,11 @@ class MyRobot(BCAbstractRobot):
                     self.destination = util.unHash(signal - 57471)
                     self.defense = False
                 else:
-                    self.destination = defense.hilbert_defense(self.log, my_coord, self.castle_loc, nav.symmetric(self.get_fuel_map()), self.get_visible_robot_map(),
-                        self.get_passable_map(), self.get_fuel_map(), self.get_karbonite_map(), SPECS['PREACHER'], self.me['team'], SPECS, type_seen)
+                    # self.destination = defense.hilbert_defense(self.log, my_coord, self.castle_loc, nav.symmetric(self.get_fuel_map()), self.get_visible_robot_map(),
+                    #     self.get_passable_map(), self.get_fuel_map(), self.get_karbonite_map(), SPECS['PREACHER'], self.me['team'], SPECS, type_seen)
+                    # self.destination = defense.lattice(self.log, self.castle_loc, full_map, fuel_map, karbonite_map, self.get_visible_robots(), self.is_visible)
+                    #NEITHER OF THESE IS WORKING, THE PREACHER IS ALWAYS TRYING TO GO TO 0,0
+                    self.destination=my_coord
 
             if my_coord[0]==self.destination[0] and my_coord[1]==self.destination[1]:
                 self.log("CURRENTLY STANDING AT " + my_coord)
@@ -794,21 +801,25 @@ class MyRobot(BCAbstractRobot):
                     return
 
             if self.numProphets < 8:
-                self.log("Need to build defense")
-                # TODO: Don't count units that are offensive or anti-expansion
-                # These units are for defense
-                if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE']:
-                    self.log("Building a Prophet")
-                    goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
-                    return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
+                if self.me['turn']%2==0:
+                    self.log("Need to build defense")
+                    # TODO: Don't count units that are offensive or anti-expansion
+                    # These units are for defense
+                    if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE']:
+                        self.log("Building a Prophet")
+                        goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
+                        return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
                 else:
                     return
+            if self.counter<40:
+                self.counter+=1
+                return
 
-            if len(self.filled_resources) < len(self.global_resources) // 3 : #and self.me['turn'] < 75:
+            if len(self.filled_resources) < len(self.global_resources) // 2 : #and self.me['turn'] < 75:
                 # Fill up at least 1/2 of the resources?
                 if self.fuel<150 and self.karbonite<60:
                     return
-                if self['turn']%4==1 or self['turn']%4==2 or self['turn']%4==3:
+                if self.me['turn']%4==1 or self.me['turn']%4==2 or self.me['turn']%4==3:
                     return
                 if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
                     signal = self.local_resources[0]
@@ -827,7 +838,8 @@ class MyRobot(BCAbstractRobot):
                 else:
                     return
 
-            if self['turn']<200:
+            if self.counter<60:
+                self.counter+=1
                 return
 
             if self.send_raid and self.raid_count > 0:
@@ -871,6 +883,7 @@ class MyRobot(BCAbstractRobot):
                     self.log("Building a Crusader!")
                     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                     return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
+
 
             if self.raid_clear and self.pilgrims_to_send > 0:
                 if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
@@ -941,7 +954,9 @@ class MyRobot(BCAbstractRobot):
                     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                     return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
 
-            if len(self.filled_resources) < len(self.global_resources) // 2:
+            #this was the second time we tried to fill half the map
+
+            if len(self.filled_resources) < len(self.global_resources) // 3/2 :
                 # Fill up at least 1/2 of the resources?
                 if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
                     signal = self.local_resources[0]
@@ -1209,10 +1224,44 @@ class MyRobot(BCAbstractRobot):
             my_coord = (self.me['x'], self.me['y'])
             my_loc=self.me['x'],self.me['y']
             self.castle_talk(190)
-            if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE'] and self.me['turn']%5 == 0:
-                self.log('Building a Prophet')
-                goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
-                return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
+            fuel_map=self.get_karbonite_map()
+            karb_map=self.get_fuel_map()
+            nearby_resources=nav.get_closest_resources_church(self.log,my_loc,self.get_visible_robot_map(),self.get_passable_map(),self.get_fuel_map(),self.get_karbonite_map())
+            self.log('I am a church and there are this many resources open close to me '+nearby_resources)
+            self.log('I am a church these are my nearby resources'+nearby_resources)
+            if self.preachers_built<2:
+                if self.fuel >= SPECS['UNITS'][SPECS['PREACHER']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PREACHER']]['CONSTRUCTION_KARBONITE']:
+                    self.preachers_built+=1
+                    self.log('Building a Preahcer')
+                    goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
+                    return self.build_unit(SPECS['PREACHER'], goal_dir[0], goal_dir[1])
+
+
+            # if len(nearby_resources)>0 and self['turn']>100:
+            #     self.log("Well, there must be nearby resources"+nearby_resources[0])
+            #     self.log('I am a church sending pilgrim to '+nearby_resources[self.pilgrims_built])
+            #     signal = nearby_resources[0]
+
+            
+
+            #     self.signal(util.nodeHash(*signal) + 57471, 4)
+
+            #     self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+            #     if self.karbonite>10 and self.fuel>50:
+            #         self.pilgrims_built+=1
+            #         goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+            #         self.pilgrims_built=self.pilgrims_built+1
+            #         return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+            
+
+
+
+
+
+            # if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE'] and self.me['turn']%5 == 0:
+            #     self.log('Building a Prophet')
+            #     goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
+            #     return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
             # if self.fuel >= SPECS['UNITS'][SPECS['PREACHER']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PREACHER']]['CONSTRUCTION_KARBONITE'] and self.me['turn']%3 == 0:
             #     self.log('Building a Preahcer')
             #     goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
