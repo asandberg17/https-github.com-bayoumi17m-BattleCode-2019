@@ -83,6 +83,8 @@ class MyRobot(BCAbstractRobot):
     already_been = {}
     base = None
 
+    hail_mary
+
     #variables for crusaders
     home=(0,0)
     castleBeaten=False
@@ -260,6 +262,13 @@ class MyRobot(BCAbstractRobot):
                     self.defending = True
                 
                 self.log("DESTINATION: " + str(self.destination))
+            
+            if signal==66:
+                self.hail_mary=True
+                return
+            if self.hail_mary:
+                self.destination=util.unHash(signal-57471)
+        
 
             if not self.entrapment and self.coolDown <= 0 and self.fuel > 2000:
                 self.log("Attack mode!")
@@ -359,6 +368,11 @@ class MyRobot(BCAbstractRobot):
                 self.raid_clear = False
 
                 #TODO: HERE WE WILL PROCESS THE DIFFERENT SIGNALS AND DETERMINE IF THIS UNIT IS A GUARD OR ATTACKING
+            if signal==66:
+                self.hail_mary=True
+                return
+            if self.hail_mary:
+                self.destination=util.unHash(signal-57471)
 
             if self.raider:
                 self.log('I am a raider. I will attack '+self.destination)
@@ -541,7 +555,7 @@ class MyRobot(BCAbstractRobot):
             if self.me['turn'] == 1:
                 self.log("trying to move")
                 if signal != -1:
-                    self.destination = util.unHash(signal - 57471)
+                    self.destination = util.unHash(signal - 57471) 
                     self.defense = False
                 else:
                     # self.destination = defense.hilbert_defense(self.log, my_coord, self.castle_loc, nav.symmetric(self.get_fuel_map()), self.get_visible_robot_map(),
@@ -814,7 +828,6 @@ class MyRobot(BCAbstractRobot):
             if self.counter<40:
                 self.counter+=1
                 return
-
             if len(self.filled_resources) < len(self.global_resources) // 2 : #and self.me['turn'] < 75:
                 # Fill up at least 1/2 of the resources?
                 if self.fuel<150 and self.karbonite<60:
@@ -828,9 +841,14 @@ class MyRobot(BCAbstractRobot):
                     while signal in self.filled_resources:
                         signal = self.local_resources[i] # [self.pilgrims_built + i]
                         i = i + 1
+                    # self.log('castleLoc length is ')
+                    # if len(self.castleLoc)>0:
+                    #     self.log('trying castles '+len(self.castleLoc))
+                    #     for c in self.castleLoc:
+                    #         self.log('going through castles '+c)
 
                     self.signal(util.nodeHash(*signal) + 57471, 4)
-
+                    self.log("castleLoc length is ")
                     self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
                     goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
                     self.pilgrims_built=self.pilgrims_built+1
@@ -874,7 +892,6 @@ class MyRobot(BCAbstractRobot):
                         signal_to_send = int(util.nodeHash(target_loc[0],target_loc[1])) + 57471
                         self.signal(signal_to_send, 4)
                         self.raid_count -= 1
-                        self.raid_count -= 1
                         if self.raid_count == 0:
                             self.send_raid = False
                             self.raid_count = 5
@@ -902,94 +919,103 @@ class MyRobot(BCAbstractRobot):
                         return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
                 else:
                     return
+            if self.raid_build<2:
+                self.send_raid=True
 
-            if self.raid_count > 0 and self.raid_build == 1:
-                # Send an early present in the form of a raiding party
-                if self.fuel >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_KARBONITE']:
-                    self.castle_talk(166)
 
-                    if len(self.anti_targets) > 0:
+            if self.me['turn']==666:
+                self.signal(666,10)
+            if self.me['turn']==667:
+                signal=nav.reflect(self.get_passable_map(),my_coord,nav.symmetric(self.get_passable_map()))
+                self.signal(util.nodeHash(*signal)+57471,100)
 
-                        i = self.last_raid
-                        k = self.last_raid
-                        while util.euclidianDistance((self.anti_targets[i][0],self.anti_targets[i][1]),(self.anti_targets[k][0],self.anti_targets[k][1])) <= 50:
-                            if k >= len(self.anti_targets):
-                                break
-                            k += 1
+            # if self.raid_count > 0 and self.raid_build<2:#and self.raid_build == 1:
+            #     # Send an early present in the form of a raiding party
+            #     if self.fuel >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['CRUSADER']]['CONSTRUCTION_KARBONITE']:
+            #         self.castle_talk(166)
 
-                        self.raid_count -= 1
+            #         if len(self.anti_targets) > 0:
 
-                        self.last_raid = k
+            #             i = self.last_raid
+            #             k = self.last_raid
+            #             while util.euclidianDistance((self.anti_targets[i][0],self.anti_targets[i][1]),(self.anti_targets[k][0],self.anti_targets[k][1])) <= 50:
+            #                 if k >= len(self.anti_targets):
+            #                     break
+            #                 k += 1
 
-                        if self.raid_count == 0:
-                            self.send_raid = False
-                            self.raid_count = 5
-                            self.raid_build += 1
+            #             self.raid_count -= 1
 
-                        signal_to_send = int(util.nodeHash(self.anti_targets[k][0],self.anti_targets[k][1])) + 57471
-                        self.signal(signal_to_send, 4)
-                    else:
-                        target_loc = nav.reflect(self.get_passable_map(), my_coord, nav.symmetric(self.get_karbonite_map()))
-                        signal_to_send = int(util.nodeHash(target_loc[0],target_loc[1])) + 57471
-                        self.signal(signal_to_send, 4)
-                        self.raid_count -= 1
-                        if self.raid_count == 0:
-                            self.send_raid = False
-                            self.raid_count = 5
-                            self.raid_build += 1
-                    self.log("Building a Crusader!")
-                    goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-                    return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
+            #             self.last_raid = k
+
+            #             if self.raid_count == 0:
+            #                 self.send_raid = False
+            #                 self.raid_count = 5
+            #                 self.raid_build += 1
+
+            #             signal_to_send = int(util.nodeHash(self.anti_targets[k][0],self.anti_targets[k][1])) + 57471
+            #             self.signal(signal_to_send, 4)
+            #         else:
+            #             target_loc = nav.reflect(self.get_passable_map(), my_coord, nav.symmetric(self.get_karbonite_map()))
+            #             signal_to_send = int(util.nodeHash(target_loc[0],target_loc[1])) + 57471
+            #             self.signal(signal_to_send, 4)
+            #             self.raid_count -= 1
+            #             if self.raid_count == 0:
+            #                 self.send_raid = False
+            #                 self.raid_count = 5
+            #                 self.raid_build += 1
+            #         self.log("Building a Crusader!")
+            #         goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+            #         return self.build_unit(SPECS['CRUSADER'], goal_dir[0], goal_dir[1])
 
             #this was the second time we tried to fill half the map
 
-            if len(self.filled_resources) < len(self.global_resources) // 2:
-                # Fill up at least 1/2 of the resources?
-                if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
-                    signal = self.local_resources[0]
+            # if len(self.filled_resources) < len(self.global_resources) // 2:
+            #     # Fill up at least 1/2 of the resources?
+            #     if self.fuel >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PILGRIM']]['CONSTRUCTION_KARBONITE']:
+            #         signal = self.local_resources[0]
 
-                    i = 0
-                    while signal in self.filled_resources:
-                        signal = self.local_resources[i] # [self.pilgrims_built + i]
-                        i = i + 1
+            #         i = 0
+            #         while signal in self.filled_resources:
+            #             signal = self.local_resources[i] # [self.pilgrims_built + i]
+            #             i = i + 1
 
-                    self.signal(util.nodeHash(*signal) + 57471, 4)
+            #         self.signal(util.nodeHash(*signal) + 57471, 4)
 
-                    self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
-                    goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
-                    self.pilgrims_built=self.pilgrims_built+1
-                    return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
-                else:
-                    return
+            #         self.log("Building a Pilgrim at " + str(self.me['x']+1) + ", " + str(self.me['y']+1))
+            #         goal_dir=nav.spawn(my_coord, self.map, self.get_visible_robot_map())
+            #         self.pilgrims_built=self.pilgrims_built+1
+            #         return self.build_unit(SPECS['PILGRIM'], goal_dir[0], goal_dir[1])
+            #     else:
+            #         return
 
-            if self.numProphets < 16:
-                self.log("Need to build defense")
-                # TODO: Don't count units that are offensive or anti-expansion
-                # These units are for defense
-                if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE']:
-                    self.log("Building a Prophet")
-                    goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
-                    return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
-                else:
-                    return
+            # if self.numProphets < 16:
+            #     self.log("Need to build defense")
+            #     # TODO: Don't count units that are offensive or anti-expansion
+            #     # These units are for defense
+            #     if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE']:
+            #         self.log("Building a Prophet")
+            #         goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
+            #         return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
+            #     else:
+            #         return
 
-            if self.circle_proph < len(self.encircle):
-                self.log("Circle incomplete!")
-                if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE'] and self.me['turn']%3 != 0:
-                    self.log('Building a Prophet')
+            # if self.circle_proph < len(self.encircle):
+            #     self.log("Circle incomplete!")
+            #     if self.fuel >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_FUEL'] and self.karbonite >= SPECS['UNITS'][SPECS['PROPHET']]['CONSTRUCTION_KARBONITE'] and self.me['turn']%3 != 0:
+            #         self.log('Building a Prophet')
                     
-                    # if self.encircle_idx == self.encircle_rev_idx:
-                    target_loc = self.encircle[self.encircle_idx]
-                    self.encircle_idx += 1
-                    # else:
-                    #     target_loc = self.encircle_rev[self.encircle_rev_idx]
-                    #     self.encircle_rev_idx += 1
+            #         # if self.encircle_idx == self.encircle_rev_idx:
+            #         target_loc = self.encircle[self.encircle_idx]
+            #         self.encircle_idx += 1
+            #         # else:
+            #         #     target_loc = self.encircle_rev[self.encircle_rev_idx]
+            #         #     self.encircle_rev_idx += 1
                     
-                    signal = util.nodeHash(*target_loc) + 57471
-                    self.signal(signal,4)
-                    self.circle_proph += 1
-                    goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
-                    return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
+            #         signal = util.nodeHash(*target_loc) + 57471
+            #         self.signal(signal,4)
+            #         self.circle_proph += 1
+            #         goal_dir=nav.spawn(my_coord, self.get_passable_map(), self.get_visible_robot_map())
+            #         return self.build_unit(SPECS['PROPHET'], goal_dir[0], goal_dir[1])
 
 
     

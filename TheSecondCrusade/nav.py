@@ -643,7 +643,7 @@ def church_or_no(me,loc,map,visible,karb,fuel):
     # total_karbonite=karbonite+my_karbonite
     # total_fuel=fuel+my_fuel
 
-    return len(churches)==0 and karb>=50 and fuel>=200
+    return len(churches)==0 #and karb>=50 and fuel>=200
 #returns a boolean on whether or not a church needs to be built
 #when were standing on the location to build a church we need to check once more that it is still necessary and that another robot
 #hasnt built one before
